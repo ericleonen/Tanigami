@@ -1,15 +1,19 @@
+import { COLORS } from "./colors";
+
 export const PUZZLE = {
-    padding: 32,
+    padding: 16,
     board: {
         dimension: 8,
-        backgroundColor: "white",
         grid: {
-            color: "rgba(119, 119, 119, 0.1)",
+            color: COLORS.gray,
             thickness: 2
         },
-        border: {
-            color: "black",
-            thickness: 2
+        target: {
+            color: COLORS.lightgray,
+            border: {
+                color: COLORS.black,
+                thickness: 4
+            }
         }
     }
 }
