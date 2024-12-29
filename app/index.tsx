@@ -1,11 +1,10 @@
-import Board from "@/components/puzzle/Board";
-import { PUZZLE } from "@/constants/puzzle";
+import Puzzle from "@/components/puzzle/Puzzle";
 import { StyleSheet, View } from "react-native";
 
 export default function Index() {
 	return (
 		<View style={styles.container}>
-			<Board />
+			<Puzzle />
 		</View>
 	);
 }

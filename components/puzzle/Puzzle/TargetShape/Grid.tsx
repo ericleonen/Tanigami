@@ -12,7 +12,6 @@ type Props = {
 
 export default function Grid({ cellSize, origin, rows, columns }: Props) {
     const lines: ReactNode[] = [];
-    const offset = PUZZLE.board.target.border.thickness;
 
     let [minX, minY] = origin;
     minX *= cellSize;
@@ -26,12 +25,12 @@ export default function Grid({ cellSize, origin, rows, columns }: Props) {
         lines.push(
             <Line 
                 key={`h-${i}`}
-                x1={minX + offset}
-                x2={maxX + offset}
-                y1={y + offset}
-                y2={y + offset}
-                stroke={PUZZLE.board.grid.color}
-                strokeWidth={PUZZLE.board.grid.thickness}
+                x1={minX}
+                x2={maxX}
+                y1={y}
+                y2={y}
+                stroke={PUZZLE.target.grid.color}
+                strokeWidth={PUZZLE.target.grid.thickness}
             />
         );
     }
@@ -42,12 +41,12 @@ export default function Grid({ cellSize, origin, rows, columns }: Props) {
         lines.push(
             <Line 
                 key={`v-${i}`}
-                x1={x + offset}
-                x2={x + offset}
+                x1={x}
+                x2={x}
                 y1={minY}
                 y2={maxY}
-                stroke={PUZZLE.board.grid.color}
-                strokeWidth={PUZZLE.board.grid.thickness}
+                stroke={PUZZLE.target.grid.color}
+                strokeWidth={PUZZLE.target.grid.thickness}
             />
         );
     }
@@ -55,11 +54,11 @@ export default function Grid({ cellSize, origin, rows, columns }: Props) {
     return (
         <>
             <Rect
-                x={minX + offset}
-                y={minY + offset}
+                x={minX }
+                y={minY }
                 height={maxX - minX}
                 width={maxY - minY}
-                fill={PUZZLE.board.target.color}
+                fill={PUZZLE.target.color}
             />
             {lines}
         </>
