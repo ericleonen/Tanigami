@@ -10,7 +10,7 @@ import { useState } from "react";
 
 const testTarget = bunny as Shape;
 const testTiles: Polygon[] = [
-    { origin: [2, 2], vertices: [[0, 0], [1, 0], [1, 1]] }
+    { origin: [1, 1], vertices: [[0, 0], [1, 0], [1, 1]] }
 ];
 
 export default function Puzzle() {
