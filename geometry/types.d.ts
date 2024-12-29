@@ -5,6 +5,8 @@
  */
 type Point = [number, number];
 
+type Vector = [number, number];
+
 /**
  * A polygon defined by an absolute origin and a list of relatively-positioned vertices. Units are
  * grid units.

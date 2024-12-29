@@ -1,31 +1,58 @@
 import { PUZZLE } from "@/constants/puzzle";
-import { polygonToSvgPoints } from "@/geometry/svg";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Polygon as SvgPolygon } from "react-native-svg";
+import Animated, { useSharedValue, useAnimatedProps, withSpring, runOnJS } from "react-native-reanimated";
+import { polygonToSvgPoints } from "@/geometry/svg";
+import { useEffect } from "react";
+
+const AnimatedPolygon = Animated.createAnimatedComponent(SvgPolygon);
 
 type Props = {
     cellSize: number,
-    tile: Polygon
-}
+    tile: Polygon,
+    setTile: (newTile: Polygon) => void;
+};
 
-export default function Tile({ cellSize, tile }: Props) {
-    const svgPoints = polygonToSvgPoints(tile, cellSize);
+export default function Tile({ cellSize, tile, setTile }: Props) {
+    const originDelta = useSharedValue<Point>([0, 0]);
 
-    const doubleTap = Gesture.Tap()
-        .numberOfTaps(2)
-        .onStart(() => {
-            console.log("double tapped!");
+    const translateTileOrigin = (delta: Point) => {
+        const origin = tile.origin || [0, 0];
+
+        setTile({
+            ...tile,
+            origin: [origin[0] + delta[0], origin[1] + delta[1]],
+        });
+    };
+
+    const drag = Gesture.Pan()
+        .onChange((event) => {
+            originDelta.value = [
+                event.translationX / cellSize,
+                event.translationY / cellSize
+            ];
+        })
+        .onEnd(() => {
+            runOnJS(translateTileOrigin)(originDelta.value);
+            originDelta.value = [0, 0];
         });
 
+    const animatedProps = useAnimatedProps(() => ({
+        transform: [
+            { translateX: originDelta.value[0] * cellSize },
+            { translateY: originDelta.value[1] * cellSize }
+        ]
+    }));
+
     return (
-        <GestureDetector gesture={doubleTap}>
-            <SvgPolygon
-                points={svgPoints}
-                stroke={PUZZLE.tile.border.color} 
+        <GestureDetector gesture={drag}>
+            <AnimatedPolygon
+                points={polygonToSvgPoints(tile, cellSize)}
+                stroke={PUZZLE.tile.border.color}
                 strokeWidth={PUZZLE.tile.border.thickness}
                 strokeLinejoin="round"
                 fill={PUZZLE.tile.color}
-                onResponderMove={(_) => {}}
+                animatedProps={animatedProps}
             />
         </GestureDetector>
     );
