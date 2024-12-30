@@ -8,6 +8,10 @@ type Props = {
 }
 
 export default function Tiles({ cellSize, tiles, setTiles }: Props) {
+    const shiftTiles = () => {
+        setTiles(prevTiles => [...prevTiles.slice(1), prevTiles[0]])
+    }
+
     return cellSize ? tiles.map((tile, i) => {
         const setTile = (newTile: Polygon) => {
             setTiles(prevTiles => prevTiles.map((prevTile, j) => (
@@ -18,7 +22,7 @@ export default function Tiles({ cellSize, tiles, setTiles }: Props) {
         return (
             <Tile 
                 key={`tile_${i}`}
-                {...{cellSize, tile, setTile}} 
+                {...{cellSize, tile, setTile, shiftTiles}} 
             />
         )
     }) : null;

@@ -1,62 +1,61 @@
 import { PUZZLE } from "@/constants/puzzle";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { Polygon as SvgPolygon } from "react-native-svg";
-import Animated, { useSharedValue, useAnimatedProps, runOnJS } from "react-native-reanimated";
+import { useSharedValue } from "react-native-reanimated";
 import { polygonToSvgPoints } from "@/geometry/svg";
-import { useEffect } from "react";
-
-const AnimatedPolygon = Animated.createAnimatedComponent(SvgPolygon);
+import { isPointInsidePolygon } from "@/geometry/point";
+import { useState } from "react";
 
 type Props = {
     cellSize: number,
     tile: Polygon,
-    setTile: (newTile: Polygon) => void;
+    setTile: (newTile: Polygon) => void,
+    shiftTiles: () => void
 };
 
-export default function Tile({ cellSize, tile, setTile }: Props) {
-    const origin = useSharedValue<Point>(tile.origin ?? [0, 0]);
-    const startOrigin = useSharedValue<Point>([0, 0]);
-
-    useEffect(() => {
-        origin.value = tile.origin ?? [0, 0];
-    }, [tile.origin, origin]);
+export default function Tile({ cellSize, tile, setTile, shiftTiles }: Props) {
+    const [lastSafeOrigin, setLastSafeOrigin] = useState<Point | null>(null);
 
     const setTileOrigin = (newOrigin: Point) => {
         setTile({
             ...tile,
-            origin: newOrigin,
+            origin: newOrigin
         });
     };
 
     const drag = Gesture.Pan()
-        .onBegin(() => {
-            startOrigin.value = [...origin.value];
+        .runOnJS(true)
+        .onStart((event) => {
+            if (isPointInsidePolygon(
+                [event.x / cellSize, event.y / cellSize],
+                tile
+            )) {
+                setLastSafeOrigin(tile.origin || [0, 0]);
+            } else {
+                setLastSafeOrigin(null);
+                shiftTiles()
+            };
         })
-        .onUpdate((event) => {
-            origin.value = [
-                startOrigin.value[0] + event.translationX / cellSize,
-                startOrigin.value[1] + event.translationY / cellSize
-            ];
+        .onChange((event) => {
+            if (!lastSafeOrigin) return;
+
+            setTileOrigin([
+                lastSafeOrigin[0] + event.translationX / cellSize,
+                lastSafeOrigin[1] + event.translationY / cellSize
+            ]);
         })
         .onEnd(() => {
-            runOnJS(setTileOrigin)(origin.value);
-        });
-
-    const animatedProps = useAnimatedProps(() => ({
-        points: tile.vertices.map(vertex => (
-            `${(origin.value[0] + vertex[0]) * cellSize},${(origin.value[1] + vertex[1]) * cellSize}`
-        )).join(" ")
-    }));
+            setLastSafeOrigin(null);
+        })
 
     return (
         <GestureDetector gesture={drag}>
-            <AnimatedPolygon
-                // points={polygonToSvgPoints(tile, cellSize)}
+            <SvgPolygon
+                points={polygonToSvgPoints(tile, cellSize)}
                 stroke={PUZZLE.tile.border.color}
                 strokeWidth={PUZZLE.tile.border.thickness}
                 strokeLinejoin="round"
                 fill={PUZZLE.tile.color}
-                animatedProps={animatedProps}
             />
         </GestureDetector>
     );

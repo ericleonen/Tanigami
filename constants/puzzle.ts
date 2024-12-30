@@ -19,6 +19,7 @@ export const PUZZLE = {
         border: {
             color: COLORS.black,
             thickness: 4
-        }
+        },
+        updateInterval: 0
     }
 }

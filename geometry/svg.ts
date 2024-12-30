@@ -6,11 +6,9 @@ import { pointSum } from "./point";
 export function polygonToSvgPoints(polygon: Polygon, cellSize: number): string {
     const origin = polygon.origin || [0, 0];
 
-    const str =  polygon.vertices.map(vertex => (
+    return polygon.vertices.map(vertex => (
         `${(origin[0] + vertex[0]) * cellSize},${(origin[1] + vertex[1]) * cellSize}`
     )).join(" ");
-
-    return str;
 };
 
 /**
