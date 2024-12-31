@@ -1,10 +1,14 @@
-import { isBetween } from "./math";
+import { isBetween } from "./number";
 
 /**
  * Creates a new Point that is the sum of the two given points. Returns that new Point.
  */
 export function pointSum(point1: Point, point2: Point): Point {
     return [point1[0] + point2[0], point1[1] + point2[1]];
+}
+
+export function pointDifference(point1: Point, point2: Point): Point {
+    return [point1[0] - point2[0], point1[1] - point2[1]];
 }
 
 export function pointScale(point: Point, scalar: number): Point {
@@ -21,6 +25,7 @@ export function isPointRightOfLine(point: Point, line: [Point, Point]): boolean 
 }
 
 export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
+    point = pointDifference(point, polygon.origin || [0, 0]);
     const numVertices = polygon.vertices.length;
     let inside = false;
 
