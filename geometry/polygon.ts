@@ -10,10 +10,9 @@ export function getPolygonOrigin(polygon: Polygon): Point {
     return [minX, minY];
 }
 
-export function getPolygonDimensions(polygon: Polygon): {
-    rows: number,
-    columns: number
-} {
+export function getPolygonDimensions(polygon: Polygon): Dimensions {
+    if (polygon.dimensions) return polygon.dimensions;
+
     const [minX, minY] = getPolygonOrigin(polygon);
 
     let maxX = 0;
@@ -24,8 +23,10 @@ export function getPolygonDimensions(polygon: Polygon): {
         maxY = Math.max(maxY, vertex[1]);
     });
 
-    return {
+    polygon.dimensions = {
         rows: maxY - minY,
         columns: maxX - minX
     };
+
+    return polygon.dimensions;
 }

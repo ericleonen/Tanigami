@@ -7,6 +7,11 @@ type Point = [number, number];
 
 type Interval = [number, number];
 
+type Dimensions = {
+    rows: number,
+    columns: number
+}
+
 /**
  * A polygon defined by an absolute origin and a list of relatively-positioned vertices. Units are
  * grid units.
@@ -22,7 +27,12 @@ type Polygon = {
      * ordered in a clockwise fashion, with the first Point having the least y value (and least x
      * value). All Points are relative to this Polygon's origin.
      */
-    vertices: Point[]
+    vertices: Point[],
+    /**
+     * The number of rows and columns in grid cell units this Polygon takes up. Do not access this
+     * directly, but use getPolygonDimensions.
+     */
+    dimensions?: Dimensions
 }
 
 /**

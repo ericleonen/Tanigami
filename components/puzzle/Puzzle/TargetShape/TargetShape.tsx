@@ -3,7 +3,7 @@ import { shapeToSvgPoints } from "@/geometry/svg";
 import { Fragment } from "react";
 import Svg, { ClipPath, Defs, G, Polygon as SvgPolygon } from "react-native-svg";
 import Grid from "./Grid";
-import { getPolygonDimensions, getPolygonOrigin } from "@/geometry/box";
+import { getPolygonDimensions, getPolygonOrigin } from "@/geometry/polygon";
 
 type Props = {
     cellSize: number,

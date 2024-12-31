@@ -2,11 +2,11 @@ import { Dispatch, SetStateAction, useState } from "react"
 import Tile from "./Tile"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Svg, { G } from "react-native-svg"
-import { View } from "react-native"
+import { StyleSheet, View } from "react-native"
 import { isPointInsidePolygon, pointScale, pointSum } from "@/geometry/point"
 import { PUZZLE } from "@/constants/puzzle"
 import { clamp } from "@/geometry/number"
-import { getPolygonDimensions } from "@/geometry/box"
+import { getPolygonDimensions } from "@/geometry/polygon"
 
 type Props = {
     cellSize: number,
@@ -21,37 +21,42 @@ type Props = {
 
 export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }: Props) {
     const [lastSafeOrigin, setLastSafeOrigin] = useState<Point | null>(null);
-    const [draggedTileIndex, setDraggedTileIndex] = useState<number | null>(null);
 
     const drag = Gesture.Pan()
         .runOnJS(true)
         .onStart((event) => {
+            // adjust the touch point for the svgMargin and convert into grid cell units
             const touchPoint: Point = pointScale(
                 [event.x - svgMargin, event.y - svgMargin], 
                 1 / cellSize
             );
 
+            // find touched tile, place it on top, and capture its last safe origin
             for (let tileIndex = 0; tileIndex < tiles.length; tileIndex++) {
                 const tile = tiles[tileIndex];
 
                 if (isPointInsidePolygon(touchPoint, tile)) {
-                    setDraggedTileIndex(tileIndex);
+                    setTiles(prevTiles => [
+                        ...prevTiles.filter(prevTile => prevTile !== tile),
+                        tile,
+                    ]);
                     setLastSafeOrigin(tile.origin || [0, 0]);
                     break;
                 }
             }
         })
         .onChange((event) => {
-            if (draggedTileIndex === null) return;
+            // don't do anything if no tile has been touched
+            if (lastSafeOrigin === null) return;
 
             const translate: Point = pointScale([event.translationX, event.translationY], 1 / cellSize);
 
             setTiles((prevTiles) => prevTiles.map((prevTile, tileIndex) => {
-                if (draggedTileIndex === tileIndex) {
+                if (tileIndex === prevTiles.length - 1) {
                     const newOrigin = pointSum(lastSafeOrigin!, translate);
 
                     // keep tile on screen
-                    const polygonDimensions = getPolygonDimensions(tiles[draggedTileIndex]);
+                    const polygonDimensions = getPolygonDimensions(prevTile);
                     newOrigin[0] = clamp(newOrigin[0], [
                         0, 
                         (svgSize.width - 2 * svgMargin) / cellSize - polygonDimensions.columns
@@ -71,7 +76,6 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
             }))
         })
         .onEnd(() => {
-            setDraggedTileIndex(null);
             setLastSafeOrigin(null);
         })
 
@@ -84,19 +88,14 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
         )
     });
 
-    return cellSize ? (
+    return (
         <GestureHandlerRootView style={{
-            position: "absolute",
+            ...styles.container,
             top: PUZZLE.screenPadding - svgMargin,
             left: PUZZLE.screenPadding - svgMargin,
-            height: "100%",
-            width: "100%",
         }}>
             <GestureDetector gesture={drag}>
-                <View style={{
-                    height: "100%",
-                    width: "100%"
-                }}> 
+                <View style={styles.activeArea}> 
                     <Svg>
                         <G transform={`translate(${svgMargin},${svgMargin})`}>
                             {svgTiles}
@@ -105,5 +104,17 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
                 </View>
             </GestureDetector>
         </GestureHandlerRootView>
-    ) : null;
+    );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        position: "absolute",
+        height: "100%",
+        width: "100%"
+    },
+    activeArea: {
+        height: "100%",
+        width: "100%"
+    }
+});
