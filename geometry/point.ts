@@ -44,3 +44,11 @@ export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
 
     return inside;
 }
+
+export function distanceBetweenPoints(point1: Point, point2: Point): number {
+    return Math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2);
+}
+
+export function nearestGridPoint(point: Point): Point {
+    return [Math.round(point[0]), Math.round(point[1])];
+}

@@ -3,7 +3,7 @@ import Tile from "./Tile"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Svg, { G } from "react-native-svg"
 import { StyleSheet, View } from "react-native"
-import { isPointInsidePolygon, pointScale, pointSum } from "@/geometry/point"
+import { distanceBetweenPoints, isPointInsidePolygon, nearestGridPoint, pointScale, pointSum } from "@/geometry/point"
 import { PUZZLE } from "@/constants/puzzle"
 import { clamp } from "@/geometry/number"
 import { getPolygonDimensions } from "@/geometry/polygon"
@@ -49,33 +49,38 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
             // don't do anything if no tile has been touched
             if (lastSafeOrigin === null) return;
 
+            const draggedTile = tiles[tiles.length - 1];
             const translate: Point = pointScale([event.translationX, event.translationY], 1 / cellSize);
+            const newOrigin = pointSum(lastSafeOrigin!, translate);
 
-            setTiles((prevTiles) => prevTiles.map((prevTile, tileIndex) => {
-                if (tileIndex === prevTiles.length - 1) {
-                    const newOrigin = pointSum(lastSafeOrigin!, translate);
+            // keep tile on screen
+            const polygonDimensions = getPolygonDimensions(draggedTile);
+            newOrigin[0] = clamp(newOrigin[0], [
+                0, 
+                (svgSize.width - 2 * svgMargin) / cellSize - polygonDimensions.columns
+            ])
+            newOrigin[1] = clamp(newOrigin[1], [
+                0, 
+                (svgSize.height - 2 * svgMargin) / cellSize - polygonDimensions.rows
+            ])
 
-                    // keep tile on screen
-                    const polygonDimensions = getPolygonDimensions(prevTile);
-                    newOrigin[0] = clamp(newOrigin[0], [
-                        0, 
-                        (svgSize.width - 2 * svgMargin) / cellSize - polygonDimensions.columns
-                    ])
-                    newOrigin[1] = clamp(newOrigin[1], [
-                        0, 
-                        (svgSize.height - 2 * svgMargin) / cellSize - polygonDimensions.rows
-                    ])
-
-                    return {
-                        ...prevTile,
-                        origin: newOrigin
-                    };
-                } else {
-                    return prevTile;
-                }
-            }))
+            setTiles(prevTiles => [...prevTiles.slice(0, -1), {
+                ...draggedTile,
+                origin: newOrigin
+            }]);
         })
         .onEnd(() => {
+            if (!lastSafeOrigin) return;
+
+            // snap to the nearest grid point
+            const draggedTile = tiles[tiles.length - 1];
+            const nearestGridOrigin = nearestGridPoint(draggedTile.origin || [0, 0]);
+
+            setTiles(prevTiles => [...prevTiles.slice(0, -1), {
+                ...draggedTile,
+                origin: nearestGridOrigin
+            }]);
+
             setLastSafeOrigin(null);
         })
 
