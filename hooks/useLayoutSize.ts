@@ -12,8 +12,8 @@ export default function useLayoutSize(padding: number): {
     const handleLayout = (event: LayoutChangeEvent) => {
         const { height, width } = event.nativeEvent.layout;
         setLayoutSize({ 
-            height: height - 2 * padding, 
-            width: width - 2 * padding
+            height: Math.max(height - 2 * padding, 0), 
+            width: Math.max(width - 2 * padding, 0)
         });
     };
 

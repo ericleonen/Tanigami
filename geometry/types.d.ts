@@ -17,11 +17,12 @@ type Dimensions = {
  * grid units.
  */
 type Polygon = {
+    id: string,
     /**
      * The absolute position of the top left point of this Polygon's box. If omitted, treated as
      * [0, 0];
      */
-    origin?: Point,
+    origin: Point,
     /**
      * A list of Points that define the relative positions of vertices of this Polygon. Points are
      * ordered in a clockwise fashion, with the first Point having the least y value (and least x

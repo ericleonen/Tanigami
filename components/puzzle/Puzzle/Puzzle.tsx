@@ -8,8 +8,8 @@ import { useState } from "react";
 
 const testTarget = bunny as Shape;
 const testTiles: Polygon[] = [
-    { origin: [0, 0], vertices: [[0, 0], [3, 0], [3, 3]] },
-    { origin: [1, 1], vertices: [[0, 0], [3, 3], [0, 3]] }
+    { id: "first", origin: [0, 0], vertices: [[0, 0], [3, 0], [3, 3]] },
+    { id: "second", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] }
 ];
 
 const svgMargin = Math.max(
@@ -18,9 +18,9 @@ const svgMargin = Math.max(
 );
 
 export default function Puzzle() {
-    const { layoutSize, handleLayout } = useLayoutSize(PUZZLE.screenPadding - svgMargin);
+    const { layoutSize: svgSize, handleLayout } = useLayoutSize(PUZZLE.screenPadding);
     const [tiles, setTiles] = useState<Polygon[]>(testTiles);
-    const cellSize = (layoutSize.width - 2 * svgMargin) / PUZZLE.columns;
+    const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;
 
     return (
         <View
@@ -29,13 +29,13 @@ export default function Puzzle() {
         >
             <TargetShape 
                 cellSize={cellSize}
-                svgWidth={layoutSize.width} 
+                svgWidth={svgSize.width} 
                 svgMargin={svgMargin}
                 target={testTarget}
             />
             <Tiles 
                 cellSize={cellSize}
-                svgSize={layoutSize}
+                svgSize={svgSize}
                 svgMargin={svgMargin}
                 tiles={tiles} 
                 setTiles={setTiles}
@@ -48,7 +48,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         width: "100%",
-        alignItems: "center",
-        padding: PUZZLE.screenPadding - svgMargin
+        alignItems: "center"
     },
 });

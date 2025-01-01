@@ -41,7 +41,11 @@ export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: P
     });
 
     return (
-        <Svg height={svgWidth} width={svgWidth}>
+        <Svg 
+            height={svgWidth} 
+            width={svgWidth}
+            style={{ marginTop: PUZZLE.screenPadding }}
+        >
             <G transform={`translate(${svgMargin},${svgMargin})`}>
                 {polygons}
             </G>
