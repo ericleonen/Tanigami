@@ -73,7 +73,7 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
                 if (tile.id === draggedTile.id) {
                     return {
                         ...tile,
-                        origin: nearestGridPointWorklet(newOrigin)
+                        origin: newOrigin
                     }
                 } else {
                     return tile;

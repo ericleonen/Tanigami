@@ -1,4 +1,4 @@
-import { isBetween, isBetweenWorklet } from "./number";
+import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
 
 /**
  * Creates a new Point that is the sum of the two given points. Returns that new Point.
@@ -30,70 +30,80 @@ export function pointScaleWorklet(point: Point, scalar: number): Point {
     return [point[0] * scalar, point[1] * scalar];
 }
 
-export function isPointRightOfLine(point: Point, line: [Point, Point]): boolean {
-    if (line[0][1] === line[1][1]) return false;
-    
-    return (
-        point[0] - line[0][0] <
-        (line[1][0] - line[0][0]) * (point[1] - line[0][1]) / (line[1][1] - line[0][1])
-    );
+export function distanceBetweenPoints(point1: Point, point2: Point): number {
+    return Math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2);
 }
 
-export function isPointRightOfLineWorklet(point: Point, line: [Point, Point]): boolean {
+export function distanceBetweenPointsWorklet(point1: Point, point2: Point): number {
     "worklet";
-    if (line[0][1] === line[1][1]) return false;
-    
-    return (
-        point[0] - line[0][0] <
-        (line[1][0] - line[0][0]) * (point[1] - line[0][1]) / (line[1][1] - line[0][1])
-    );
+    return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** 0.5;
+}
+
+export function isPointOnLineSegment(point: Point, lineSegment: [Point, Point]): boolean {
+    const d = distanceBetweenPoints(...lineSegment);
+    const d1 = distanceBetweenPoints(point, lineSegment[0]);
+    const d2 = distanceBetweenPoints(point, lineSegment[1]);
+
+    return isApproximatelyEqual(d, d1 + d2);
+}
+
+export function isPointOnLineSegmentWorklet(point: Point, lineSegment: [Point, Point]): boolean {
+    "worklet";
+
+    const d = distanceBetweenPointsWorklet(...lineSegment);
+    const d1 = distanceBetweenPointsWorklet(point, lineSegment[0]);
+    const d2 = distanceBetweenPointsWorklet(point, lineSegment[1]);
+
+    return isApproximatelyEqualWorklet(d, d1 + d2);
 }
 
 export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
     point = pointDifference(point, polygon.origin);
-    const numVertices = polygon.vertices.length;
-    let inside = false;
+    let intersections = 0;
 
-    for (let i = 0; i < numVertices; i++) {
-        const j = (i + 1) % numVertices;
+    for (let i = 0; i < polygon.vertices.length; i++) {
+        const currentVertex = polygon.vertices[i];
+        const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
 
-        const point1 = polygon.vertices[i];
-        const point2 = polygon.vertices[j];
+        if (isPointOnLineSegment(point, [currentVertex, nextVertex])) return true;
 
-        const intersect = 
-            isBetween(point[1], [point1[1], point2[1]]) &&
-            isPointRightOfLine(point, [point1, point2]);
+        const [lowerVertex, upperVertex] = currentVertex[1] <= nextVertex[1] ?
+            [currentVertex, nextVertex] : [nextVertex, currentVertex];
 
-        if (intersect) inside = !inside;
+        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) continue;
+
+        const intersectX = lowerVertex[0] + ((point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]));
+
+        if (intersectX > point[0]) intersections++;
     }
 
-    return inside;
+    return intersections % 2 !== 0;
 }
 
 export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon): boolean {
     "worklet";
     point = pointDifferenceWorklet(point, polygon.origin);
-    const numVertices = polygon.vertices.length;
-    let inside = false;
+    let intersections = 0;
 
-    for (let i = 0; i < numVertices; i++) {
-        const j = (i + 1) % numVertices;
+    console.log(point);
 
-        const point1 = polygon.vertices[i];
-        const point2 = polygon.vertices[j];
+    for (let i = 0; i < polygon.vertices.length; i++) {
+        const currentVertex = polygon.vertices[i];
+        const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
 
-        const intersect = 
-            isBetweenWorklet(point[1], [point1[1], point2[1]]) &&
-            isPointRightOfLineWorklet(point, [point1, point2]);
+        if (isPointOnLineSegmentWorklet(point, [currentVertex, nextVertex])) return true;
 
-        if (intersect) inside = !inside;
+        const [lowerVertex, upperVertex] = currentVertex[1] <= nextVertex[1] ?
+            [currentVertex, nextVertex] : [nextVertex, currentVertex];
+
+        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) continue;
+
+        const intersectX = lowerVertex[0] + ((point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]));
+
+        if (intersectX > point[0]) intersections++;
     }
 
-    return inside;
-}
-
-export function distanceBetweenPoints(point1: Point, point2: Point): number {
-    return Math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2);
+    return intersections % 2 !== 0;
 }
 
 export function nearestGridPoint(point: Point): Point {

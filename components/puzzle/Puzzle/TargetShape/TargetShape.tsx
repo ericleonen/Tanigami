@@ -1,9 +1,9 @@
 import { PUZZLE } from "@/constants/puzzle";
-import { shapeToSvgPoints } from "@/geometry/svg";
+import { polygonToSvgPoints } from "@/geometry/svg";
 import { Fragment } from "react";
 import Svg, { ClipPath, Defs, G, Polygon as SvgPolygon } from "react-native-svg";
 import Grid from "./Grid";
-import { getPolygonDimensions, getPolygonOrigin } from "@/geometry/polygon";
+import { getPolygonDimensions } from "@/geometry/polygon";
 
 type Props = {
     cellSize: number,
@@ -13,8 +13,10 @@ type Props = {
 };
 
 export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: Props) {
-    const polygons = shapeToSvgPoints(target, cellSize).map((svgPoints, i) => {
-        const key = `target_polygon_${i}`;
+    const polygons = target.map(polygon => {
+        const key = polygon.id;
+        const svgPoints = polygonToSvgPoints(polygon, cellSize);
+
         return (
             <Fragment key={key}>
                 <Defs>
@@ -24,9 +26,9 @@ export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: P
                 </Defs>
                 <G clipPath={`url(#${key})`}>
                     <Grid 
-                        cellSize={cellSize} 
-                        origin={getPolygonOrigin(target.polygons[i])}
-                        {...getPolygonDimensions(target.polygons[i])}
+                        cellSize={cellSize}
+                        origin={polygon.origin}
+                        {...getPolygonDimensions(polygon)}
                     />
                 </G>
                 <SvgPolygon 
@@ -37,7 +39,7 @@ export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: P
                     fill="none"
                 />
             </Fragment>
-        );
+        )
     });
 
     return (

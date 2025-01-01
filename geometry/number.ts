@@ -35,3 +35,12 @@ export function clampWorklet(x: number, interval: [number, number]): number {
         return clampWorklet(x, [interval[1], interval[0]]);
     }
 }
+
+export function isApproximatelyEqual(x1: number, x2: number, tolerance = 0.01) {
+    return Math.abs(x1 - x2) <= tolerance;
+}
+
+export function isApproximatelyEqualWorklet(x1: number, x2: number, tolerance = 0.01) {
+    "worklet";
+    return Math.abs(x1 - x2) <= tolerance;
+}

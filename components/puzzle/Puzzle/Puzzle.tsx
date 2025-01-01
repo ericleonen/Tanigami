@@ -4,12 +4,14 @@ import TargetShape from "./TargetShape";
 import bunny from "@/assets/targets/bunny.json";
 import Tiles from "./Tiles";
 import useLayoutSize from "@/hooks/useLayoutSize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { distanceBetweenPoints, nearestGridPoint } from "@/geometry/point";
+import { isPolygonInsideShape } from "@/geometry/polygon";
 
-const testTarget = bunny as Shape;
+const testTarget = bunny.shape as Shape;
 const testTiles: Polygon[] = [
-    { id: "first", origin: [0, 0], vertices: [[0, 0], [3, 0], [3, 3]] },
-    { id: "second", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] }
+    // { id: "triangle", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] }
+    { id: "small_triangle", origin: [0, 0], vertices: [[0, 0], [1, 1], [0, 1]] }
 ];
 
 const svgMargin = Math.max(
@@ -20,7 +22,27 @@ const svgMargin = Math.max(
 export default function Puzzle() {
     const { layoutSize: svgSize, handleLayout } = useLayoutSize(PUZZLE.screenPadding);
     const [tiles, setTiles] = useState<Polygon[]>(testTiles);
+    const [target, setTarget] = useState<Shape>(testTarget);
     const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;
+
+    useEffect(() => {
+        for (const tile of tiles) {
+            const snappedTileOrigin = nearestGridPoint(tile.origin);
+            if (distanceBetweenPoints(snappedTileOrigin, tile.origin) === 0) continue;
+
+            const snappedTile = { ...tile, origin: snappedTileOrigin };
+
+            if (isPolygonInsideShape(snappedTile, target)) {
+                setTiles(prevTiles => prevTiles.map(prevTile => {
+                    if (prevTile.id === snappedTile.id) {
+                        return snappedTile;
+                    } else {
+                        return prevTile;
+                    }
+                }));
+            }
+        }
+    }, [tiles, setTiles]);
 
     return (
         <View
@@ -31,7 +53,7 @@ export default function Puzzle() {
                 cellSize={cellSize}
                 svgWidth={svgSize.width} 
                 svgMargin={svgMargin}
-                target={testTarget}
+                target={target}
             />
             <Tiles 
                 cellSize={cellSize}

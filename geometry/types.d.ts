@@ -36,20 +36,4 @@ type Polygon = {
     dimensions?: Dimensions
 }
 
-/**
- * A shape defined by an absolute origin and a list of relatively-positioned Polygons. Units are
- * grid units.
- */
-type Shape = {
-    /**
-     * The absolute position of the top left point of this Shape's box. If omitted, treated as
-     * [0, 0].
-     */
-    origin?: Point,
-    /**
-     * A list of Polygons that define the structure of this Shape. The origins of each Polygon are
-     * relative to this Shape's origin. The vertices of each Polygon remain relative to their
-     * Polygon's origin.
-     */
-    polygons: Polygon[]
-}
+type Shape = Polygon[];
