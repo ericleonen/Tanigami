@@ -57,7 +57,7 @@ export function isPointOnLineSegmentWorklet(point: Point, lineSegment: [Point, P
     return isApproximatelyEqualWorklet(d, d1 + d2);
 }
 
-export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
+export function isPointInsidePolygon(point: Point, polygon: Polygon, includeBoundaries = true): boolean {
     point = pointDifference(point, polygon.origin);
     let intersections = 0;
 
@@ -65,7 +65,7 @@ export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
         const currentVertex = polygon.vertices[i];
         const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
 
-        if (isPointOnLineSegment(point, [currentVertex, nextVertex])) return true;
+        if (isPointOnLineSegment(point, [currentVertex, nextVertex])) return includeBoundaries;
 
         const [lowerVertex, upperVertex] = currentVertex[1] <= nextVertex[1] ?
             [currentVertex, nextVertex] : [nextVertex, currentVertex];
@@ -80,7 +80,7 @@ export function isPointInsidePolygon(point: Point, polygon: Polygon): boolean {
     return intersections % 2 !== 0;
 }
 
-export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon): boolean {
+export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon, includeBoundaries = true): boolean {
     "worklet";
     point = pointDifferenceWorklet(point, polygon.origin);
     let intersections = 0;
@@ -89,7 +89,7 @@ export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon): boo
         const currentVertex = polygon.vertices[i];
         const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
 
-        if (isPointOnLineSegmentWorklet(point, [currentVertex, nextVertex])) return true;
+        if (isPointOnLineSegmentWorklet(point, [currentVertex, nextVertex])) return includeBoundaries;
 
         const [lowerVertex, upperVertex] = currentVertex[1] <= nextVertex[1] ?
             [currentVertex, nextVertex] : [nextVertex, currentVertex];

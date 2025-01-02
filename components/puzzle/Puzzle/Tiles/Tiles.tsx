@@ -38,11 +38,12 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, t
             );
 
             // find touched tile and capture its id
-            for (let tileIndex = 0; tileIndex < tiles.length; tileIndex++) {
+            for (let tileIndex = tiles.length - 1; tileIndex >= 0; tileIndex--) {
                 const tile = tiles[tileIndex];
 
                 if (isPointInsidePolygonWorklet(touchPoint, tile)) {
                     runOnJS(setDraggedTile)(tile);
+                    runOnJS(setTiles)([...tiles.filter(prevTile => prevTile.id !== tile.id), tile])
                     break;
                 }
             }
@@ -97,7 +98,10 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, t
             );
 
             // snap tile inside target if applicable
-            if (snappedTile.value && isPolygonInsideShapeWorklet(snappedTile.value, target)) {
+            if (
+                snappedTile.value && 
+                isPolygonInsideShapeWorklet(snappedTile.value, target)
+            ) {
                 newOrigin = snappedTile.value.origin;
             }
 
@@ -113,54 +117,8 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, t
             }))
             runOnJS(setDraggedTile)(null);
         })
-        // .onChange((event) => {
-        //     // don't do anything if no tile has been touched
-        //     if (lastSafeOrigin === null) return;
 
-        //     const draggedTile = tiles[tiles.length - 1];
-        //     const translate: Point = pointScale([event.translationX, event.translationY], 1 / cellSize);
-        //     const newOrigin = pointSum(lastSafeOrigin!, translate);
-
-        //     // keep tile on screen
-        //     const polygonDimensions = getPolygonDimensions(draggedTile);
-        //     newOrigin[0] = clamp(newOrigin[0], [
-        //         0, 
-        //         (svgSize.width - 2 * svgMargin) / cellSize - polygonDimensions.columns
-        //     ])
-        //     newOrigin[1] = clamp(newOrigin[1], [
-        //         0, 
-        //         (svgSize.height - 2 * svgMargin) / cellSize - polygonDimensions.rows
-        //     ])
-
-        //     setTiles(prevTiles => [...prevTiles.slice(0, -1), {
-        //         ...draggedTile,
-        //         origin: newOrigin
-        //     }]);
-        // })
-        // .onEnd(() => {
-        //     if (!lastSafeOrigin) return;
-
-        //     // snap to the nearest grid point
-        //     const draggedTile = tiles[tiles.length - 1];
-        //     const nearestGridOrigin = nearestGridPoint(draggedTile.origin);
-
-        //     setTiles(prevTiles => [...prevTiles.slice(0, -1), {
-        //         ...draggedTile,
-        //         origin: nearestGridOrigin
-        //     }]);
-
-        //     setLastSafeOrigin(null);
-        // })
-
-    const svgTiles = tiles.reduce((list, tile) => {
-        if (tile.id === draggedTile?.id) {
-            list.push(tile);
-        } else {
-            list.unshift(tile);
-        }
-
-        return list;
-    }, [] as Polygon[]).map(tile => {
+    const svgTiles = tiles.map(tile => {
         return (
             <Tile 
                 key={tile.id}

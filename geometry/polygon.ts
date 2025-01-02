@@ -122,7 +122,7 @@ export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: P
         const insideVertex2 = insideVertices[(i + 1) % insideVertices.length];
         const insideEdge: [Point, Point] = [insideVertex1, insideVertex2];
 
-        for (let j = 0; j < outsidePolygon.vertices.length; j++) {
+        for (let j = 0; j < outsideVertices.length; j++) {
             const outsideVertex1 = outsideVertices[j];
             const outsideVertex2 = outsideVertices[(j + 1) % outsideVertices.length];
 
@@ -149,7 +149,7 @@ export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePol
         const insideVertex2 = insideVertices[(i + 1) % insideVertices.length];
         const insideEdge: [Point, Point] = [insideVertex1, insideVertex2];
 
-        for (let j = 0; j < outsidePolygon.vertices.length; j++) {
+        for (let j = 0; j < outsideVertices.length; j++) {
             const outsideVertex1 = outsideVertices[j];
             const outsideVertex2 = outsideVertices[(j + 1) % outsideVertices.length];
 
