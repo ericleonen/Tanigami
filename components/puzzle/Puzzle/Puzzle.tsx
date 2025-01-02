@@ -8,8 +8,28 @@ import { useState } from "react";
 
 const testTarget = bunny.shape as Shape;
 const testTiles: Polygon[] = [
-    { id: "triangle", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] },
-    { id: "small_triangle", origin: [0, 0], vertices: [[0, 0], [1, 1], [0, 1]] }
+    {...testTarget[0], id: "piece_1"},
+    {...testTarget[1], id: "piece_2"},
+    {
+        id: "piece_3",
+        origin: [2, 2],
+        vertices: [[1, 0], [2, 0], [2, 2], [1, 2], [0, 1]]
+    },
+    {
+        id: "piece_4",
+        origin: [4, 3],
+        vertices: [[0, 0], [2, 2], [0, 2]]
+    },
+    {
+        id: "piece_5",
+        origin: [3, 5],
+        vertices: [[1, 0], [3, 0], [3, 1], [4, 2], [3, 3], [1, 1], [0, 1]]
+    },
+    {
+        id: "piece_6",
+        origin: [3, 6],
+        vertices: [[1, 0], [3, 2], [0, 2], [1, 1]]
+    }
 ];
 
 const svgMargin = Math.max(
