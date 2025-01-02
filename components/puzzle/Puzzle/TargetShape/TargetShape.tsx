@@ -9,10 +9,19 @@ type Props = {
     cellSize: number,
     svgWidth: number,
     svgMargin: number,
-    target: Shape
+    target: Shape,
+    targetHighlight: Polygon | null
 };
 
-export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: Props) {
+export default function TargetShape({ cellSize, svgWidth, svgMargin, target, targetHighlight }: Props) {
+    const highlight = targetHighlight ? (
+        <SvgPolygon
+            points={polygonToSvgPoints(targetHighlight, cellSize)}
+            fill={PUZZLE.tile.color}
+            opacity={PUZZLE.tile.highlightOpacity}
+        />
+    ) : null;
+    
     const polygons = target.map(polygon => {
         const key = polygon.id;
         const svgPoints = polygonToSvgPoints(polygon, cellSize);
@@ -30,6 +39,7 @@ export default function TargetShape({ cellSize, svgWidth, svgMargin, target }: P
                         origin={polygon.origin}
                         {...getPolygonDimensions(polygon)}
                     />
+                    {highlight}
                 </G>
                 <SvgPolygon 
                     points={svgPoints}

@@ -4,13 +4,11 @@ import TargetShape from "./TargetShape";
 import bunny from "@/assets/targets/bunny.json";
 import Tiles from "./Tiles";
 import useLayoutSize from "@/hooks/useLayoutSize";
-import { useEffect, useState } from "react";
-import { distanceBetweenPoints, nearestGridPoint } from "@/geometry/point";
-import { isPolygonInsideShape } from "@/geometry/polygon";
+import { useState } from "react";
 
 const testTarget = bunny.shape as Shape;
 const testTiles: Polygon[] = [
-    // { id: "triangle", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] }
+    { id: "triangle", origin: [3, 3], vertices: [[0, 0], [3, 3], [0, 3]] },
     { id: "small_triangle", origin: [0, 0], vertices: [[0, 0], [1, 1], [0, 1]] }
 ];
 
@@ -24,25 +22,7 @@ export default function Puzzle() {
     const [tiles, setTiles] = useState<Polygon[]>(testTiles);
     const [target, setTarget] = useState<Shape>(testTarget);
     const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;
-
-    useEffect(() => {
-        for (const tile of tiles) {
-            const snappedTileOrigin = nearestGridPoint(tile.origin);
-            if (distanceBetweenPoints(snappedTileOrigin, tile.origin) === 0) continue;
-
-            const snappedTile = { ...tile, origin: snappedTileOrigin };
-
-            if (isPolygonInsideShape(snappedTile, target)) {
-                setTiles(prevTiles => prevTiles.map(prevTile => {
-                    if (prevTile.id === snappedTile.id) {
-                        return snappedTile;
-                    } else {
-                        return prevTile;
-                    }
-                }));
-            }
-        }
-    }, [tiles, setTiles]);
+    const [targetHighlight, setTargetHighlight] = useState<Polygon | null>(null);
 
     return (
         <View
@@ -54,6 +34,7 @@ export default function Puzzle() {
                 svgWidth={svgSize.width} 
                 svgMargin={svgMargin}
                 target={target}
+                targetHighlight={targetHighlight}
             />
             <Tiles 
                 cellSize={cellSize}
@@ -61,6 +42,8 @@ export default function Puzzle() {
                 svgMargin={svgMargin}
                 tiles={tiles} 
                 setTiles={setTiles}
+                target={target}
+                setTargetHighlight={setTargetHighlight}
             />
         </View>
     )

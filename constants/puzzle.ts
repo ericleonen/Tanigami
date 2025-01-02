@@ -16,6 +16,7 @@ export const PUZZLE = {
     },
     tile: {
         color: COLORS.yellow,
+        highlightOpacity: 0.5,
         border: {
             color: COLORS.black,
             thickness: 4

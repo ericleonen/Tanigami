@@ -85,8 +85,6 @@ export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon): boo
     point = pointDifferenceWorklet(point, polygon.origin);
     let intersections = 0;
 
-    console.log(point);
-
     for (let i = 0; i < polygon.vertices.length; i++) {
         const currentVertex = polygon.vertices[i];
         const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];

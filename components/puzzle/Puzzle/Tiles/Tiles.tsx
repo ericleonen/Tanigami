@@ -3,10 +3,10 @@ import Tile from "./Tile"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Svg, { G } from "react-native-svg"
 import { StyleSheet, View } from "react-native"
-import { isPointInsidePolygonWorklet, nearestGridPointWorklet, pointScaleWorklet, pointSumWorklet } from "@/geometry/point"
+import { distanceBetweenPointsWorklet, isPointInsidePolygonWorklet, nearestGridPointWorklet, pointScaleWorklet, pointSumWorklet } from "@/geometry/point"
 import { PUZZLE } from "@/constants/puzzle"
 import { clampWorklet } from "@/geometry/number"
-import { getPolygonDimensionsWorklet } from "@/geometry/polygon"
+import { getPolygonDimensionsWorklet, isPolygonInsideShapeWorklet } from "@/geometry/polygon"
 import { runOnJS, useSharedValue } from "react-native-reanimated"
 
 type Props = {
@@ -17,11 +17,14 @@ type Props = {
     },
     svgMargin: number,
     tiles: Polygon[],
-    setTiles: Dispatch<SetStateAction<Polygon[]>>
+    setTiles: Dispatch<SetStateAction<Polygon[]>>,
+    target: Shape,
+    setTargetHighlight: Dispatch<SetStateAction<Polygon | null>>
 }
 
-export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }: Props) {
-    const animatedTranslation = useSharedValue<Point>([0, 0])
+export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, target, setTargetHighlight }: Props) {
+    const animatedTranslation = useSharedValue<Point>([0, 0]);
+    const snappedTile = useSharedValue<Polygon | null>(null);
     const [draggedTile, setDraggedTile] = useState<Polygon | null>(null);
 
     const offset = PUZZLE.screenPadding + svgMargin;
@@ -53,6 +56,30 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
                 [event.translationX, event.translationY], 
                 1 / cellSize
             );
+            
+            const newSnappedTileOrigin = nearestGridPointWorklet(
+                pointSumWorklet(animatedTranslation.value, draggedTile.origin)
+            );
+
+            if (
+                draggedTile.id !== snappedTile.value?.id || 
+                snappedTile.value && distanceBetweenPointsWorklet(newSnappedTileOrigin, snappedTile.value.origin) > 0
+            ) {
+                snappedTile.value = {
+                    ...draggedTile,
+                    origin: newSnappedTileOrigin
+                };
+    
+                if (isPolygonInsideShapeWorklet(snappedTile.value, target)) {
+                    runOnJS(setTargetHighlight)({
+                        id: snappedTile.value.id + "_highlight",
+                        vertices: snappedTile.value.vertices,
+                        origin: snappedTile.value.origin
+                    });
+                } else {
+                    runOnJS(setTargetHighlight)(null);
+                }
+            }
         })
         .onEnd(() => {
             if (!draggedTile) return;
@@ -68,6 +95,11 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles }:
                 newOrigin[1], 
                 [0, (svgSize.height - 2 * svgMargin) / cellSize - draggedTileDimensions.rows]
             );
+
+            // snap tile inside target if applicable
+            if (snappedTile.value && isPolygonInsideShapeWorklet(snappedTile.value, target)) {
+                newOrigin = snappedTile.value.origin;
+            }
 
             runOnJS(setTiles)(tiles.map(tile => {
                 if (tile.id === draggedTile.id) {

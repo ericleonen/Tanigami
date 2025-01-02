@@ -16,8 +16,8 @@ export default function Grid({ cellSize, origin, rows, columns }: Props) {
     let [minX, minY] = origin;
     minX *= cellSize;
     minY *= cellSize;
-    const maxX = minX + (columns + 1) * cellSize;
-    const maxY = minY + (rows + 1) * cellSize;
+    const maxX = minX + columns * cellSize;
+    const maxY = minY + rows * cellSize;
 
     for (let i = 0; i < rows - 1; i++) {
         // create horizontal line
@@ -54,10 +54,10 @@ export default function Grid({ cellSize, origin, rows, columns }: Props) {
     return (
         <>
             <Rect
-                x={minX }
-                y={minY }
-                height={maxX - minX}
-                width={maxY - minY}
+                x={origin[0] * cellSize}
+                y={origin[1] * cellSize}
+                height={rows * cellSize}
+                width={columns * cellSize}
                 fill={PUZZLE.target.color}
             />
             {lines}
