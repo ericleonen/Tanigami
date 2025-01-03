@@ -1,5 +1,4 @@
 import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
-import { getPolygonEdges, getPolygonEdgesWorklet } from "./polygon";
 
 /**
  * Creates a new Point that is the sum of the two given points. Returns that new Point.
@@ -79,72 +78,11 @@ export function isPointOnLineSegment(point: Point, lineSegment: LineSegment): bo
  */
 export function isPointOnLineSegmentWorklet(point: Point, lineSegment: LineSegment): boolean {
     "worklet";
-
     const d = distanceBetweenPointsWorklet(...lineSegment);
     const d1 = distanceBetweenPointsWorklet(point, lineSegment[0]);
     const d2 = distanceBetweenPointsWorklet(point, lineSegment[1]);
 
     return isApproximatelyEqualWorklet(d, d1 + d2);
-}
-
-/**
- * Returns true if the given point (absolute) lies on an edge of the given polygon, false
- * otherwise.
- */
-export function isPointOnPolygonEdges(point: Point, polygon: Polygon): boolean {
-    const edges = getPolygonEdges(polygon);
-
-    return edges.some(edge => isPointOnLineSegment(point, edge));
-}
-
-/**
- * Returns true if the given point (absolute) lies inside the given polygon, false otherwise. If
- * and only if includeEdges = true (default), points lying on the polygon's edges are inside the
- * polygon.
- */
-export function isPointInsidePolygon(point: Point, polygon: Polygon, includeEdges = true): boolean {
-    let intersections = 0;
-
-    getPolygonEdges(polygon).forEach(edge => {
-        if (isPointOnLineSegment(point, edge)) return includeEdges;
-
-        const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
-            edge : [edge[1], edge[0]];
-
-        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) return;
-
-        const intersectX = lowerVertex[0] + 
-            (point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]);
-
-        if (intersectX > point[0]) intersections++
-    });
-
-    return intersections % 2 !== 0;
-}
-
-/**
- * Returns true if the given point (absolute) lies inside the given polygon, false otherwise. If
- * and only if includeEdges = true (default), points lying on the polygon's edges are inside the
- * polygon.
- */
-export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon, includeEdges = true): boolean {
-    let intersections = 0;
-
-    getPolygonEdgesWorklet(polygon).forEach(edge => {
-        if (isPointOnLineSegmentWorklet(point, edge)) return includeEdges;
-
-        const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
-            edge : [edge[1], edge[0]];
-
-        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) return;
-
-        const intersectX = lowerVertex[0] + 
-            (point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]);
-
-        if (intersectX > point[0]) intersections++
-    });
-
-    return intersections % 2 !== 0;
 }
 
 /**

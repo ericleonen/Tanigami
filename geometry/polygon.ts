@@ -1,4 +1,5 @@
-import { isPointInsidePolygon, isPointInsidePolygonWorklet, isPointOnLineSegment, pointDifference, pointDifferenceWorklet, pointSum, pointSumWorklet } from "./point";
+import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getGridPointsOnLineSegment, isLineSegmentInsideLineSegment } from "./lineSegment";
+import { isPointOnLineSegment, isPointOnLineSegmentWorklet, pointDifference, pointDifferenceWorklet, pointSum, pointSumWorklet } from "./point";
 
 /**
  * Returns the dimensions (rows and columns) of the given polygon. 
@@ -88,54 +89,64 @@ export function getPolygonEdgesWorklet(polygon: Polygon): LineSegment[] {
 }
 
 /**
- * Returns true if the given edges intersect, false otherwise. Intersections at endpoints do not
- * count. Parallel edges (even overlapping ones) can never intersect.
+ * Returns true if the given point (absolute) lies on an edge of the given polygon, false
+ * otherwise.
  */
-export function doEdgesIntersect(edge1: LineSegment, edge2: LineSegment): boolean {
-    const vector1 = pointDifference(edge1[1], edge1[0]);
-    const vector2 = pointDifference(edge2[1], edge2[0]);
+export function isPointOnPolygonEdges(point: Point, polygon: Polygon): boolean {
+    const edges = getPolygonEdges(polygon);
 
-    const determinant = vector1[0] * vector2[1] - vector1[1] * vector2[0];
-
-    if (determinant != 0) {
-        const dx = edge1[0][0] - edge2[0][0];
-        const dy = edge1[0][1] - edge2[0][1];
-
-        const s = (vector2[0] * dy - vector2[1] * dx) / determinant;
-        const t = (vector1[0] * dy - vector1[1] * dx) / determinant;
-    
-        if (0 < s && s < 1 && 0 < t && t < 1) {
-            return true;
-        }
-    }
-
-    return false;
+    return edges.some(edge => isPointOnLineSegment(point, edge));
 }
 
 /**
- * Returns true if the given edges intersect, false otherwise. Intersections at endpoints do not
- * count. Parallel edges (even overlapping ones) can never intersect.
+ * Returns true if the given point (absolute) lies inside the given polygon, false otherwise. If
+ * and only if includeEdges = true (default), points lying on the polygon's edges are inside the
+ * polygon.
  */
-export function doEdgesIntersectWorklet(edge1: LineSegment, edge2: LineSegment): boolean {
-    "worklet";
-    const vector1 = pointDifferenceWorklet(edge1[1], edge1[0]);
-    const vector2 = pointDifferenceWorklet(edge2[1], edge2[0]);
+export function isPointInsidePolygon(point: Point, polygon: Polygon, includeEdges = true): boolean {
+    let intersections = 0;
 
-    const determinant = vector1[0] * vector2[1] - vector1[1] * vector2[0];
+    for (const edge of getPolygonEdges(polygon)) {
+        if (isPointOnLineSegment(point, edge)) return includeEdges;
 
-    if (determinant != 0) {
-        const dx = edge1[0][0] - edge2[0][0];
-        const dy = edge1[0][1] - edge2[0][1];
+        const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
+            edge : [edge[1], edge[0]];
 
-        const s = (vector2[0] * dy - vector2[1] * dx) / determinant;
-        const t = (vector1[0] * dy - vector1[1] * dx) / determinant;
-    
-        if (0 < s && s < 1 && 0 < t && t < 1) {
-            return true;
-        }
+        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) continue;
+
+        const intersectX = lowerVertex[0] + 
+            (point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]);
+
+        if (intersectX > point[0]) intersections++
     }
 
-    return false;
+    return intersections % 2 !== 0;
+}
+
+/**
+ * Returns true if the given point (absolute) lies inside the given polygon, false otherwise. If
+ * and only if includeEdges = true (default), points lying on the polygon's edges are inside the
+ * polygon.
+ */
+export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon, includeEdges = true): boolean {
+    "worklet"
+    let intersections = 0;
+
+    for (const edge of getPolygonEdgesWorklet(polygon)) {
+        if (isPointOnLineSegmentWorklet(point, edge)) return includeEdges;
+
+        const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
+            edge : [edge[1], edge[0]];
+
+        if (point[1] < lowerVertex[1] || point[1] >= upperVertex[1]) continue;
+
+        const intersectX = lowerVertex[0] + 
+            (point[1] - lowerVertex[1]) * (upperVertex[0] - lowerVertex[0]) / (upperVertex[1] - lowerVertex[1]);
+
+        if (intersectX > point[0]) intersections++
+    }
+
+    return intersections % 2 !== 0;
 }
 
 /**
@@ -153,7 +164,7 @@ export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: P
     // no edges between the inside and outside polygons intersect
     return !getPolygonEdges(insidePolygon).some(insideEdge => {
         return getPolygonEdges(outsidePolygon).some(outsideEdge => (
-            doEdgesIntersect(insideEdge, outsideEdge)
+            doLineSegmentsIntersect(insideEdge, outsideEdge)
         ));
     });
 }
@@ -174,26 +185,9 @@ export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePol
     // no edges between the inside and outside polygons intersect
     return !getPolygonEdgesWorklet(insidePolygon).some(insideEdge => {
         return getPolygonEdgesWorklet(outsidePolygon).some(outsideEdge => (
-            doEdgesIntersectWorklet(insideEdge, outsideEdge)
+            doLineSegmentsIntersectWorklet(insideEdge, outsideEdge)
         ));
     });
-}
-
-/**
- * Returns true if the given polygon lies inside the given shape. The polygon can share (part)
- * of an edge of the shape and still be considered inside.
- */
-export function isPolygonInsideShape(polygon: Polygon, shape: Shape): boolean {
-    return shape.some(shapePolygon => isPolygonInsidePolygon(polygon, shapePolygon));
-}
-
-/**
- * Returns true if the given polygon lies inside the given shape. The polygon can share (part)
- * of an edge of the shape and still be considered inside.
- */
-export function isPolygonInsideShapeWorklet(polygon: Polygon, shape: Shape): boolean {
-    "worklet";
-    return shape.some(shapePolygon => isPolygonInsidePolygonWorklet(polygon, shapePolygon));
 }
 
 /**
@@ -201,14 +195,36 @@ export function isPolygonInsideShapeWorklet(polygon: Polygon, shape: Shape): boo
  */
 export function doesPolygonContainEdge(polygon: Polygon, edge: LineSegment): boolean {
     return getPolygonEdges(polygon).some(
-        polygonEdge => doesEdgeContainEdge(edge, polygonEdge)
+        polygonEdge => isLineSegmentInsideLineSegment(edge, polygonEdge)
     );
 }
 
 /**
- * Returns true if the inner edge lies on the outer edge.
+ * Returns the area of the given polygon. 
  */
-export function doesEdgeContainEdge(innerEdge: LineSegment, outerEdge: LineSegment): boolean {
-    return isPointOnLineSegment(innerEdge[0], outerEdge) && 
-        isPointOnLineSegment(innerEdge[1], outerEdge);
+export function getPolygonArea(polygon: Polygon): number {
+    if (polygon.area) return polygon.area;
+
+    polygon.area = 0;
+
+    polygon.vertices.forEach((currentVertex, i) => {
+        const prevVertex = polygon.vertices[(i - 1 + polygon.vertices.length) % polygon.vertices.length];
+        const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
+
+        polygon.area! += currentVertex[1] * (prevVertex[0] - nextVertex[0]);
+    });
+
+    return polygon.area /= 2;
+}
+
+/**
+ * Returns a list of all grid points that lie on the given polygon
+ */
+export function getGridPointsOnPolygonEdges(polygon: Polygon): Point[] {
+    return getPolygonEdges(polygon).reduce((points, edge) => {
+        points.push(...getGridPointsOnLineSegment(edge));
+        points.pop();
+
+        return points;
+    }, [] as Point[]);
 }

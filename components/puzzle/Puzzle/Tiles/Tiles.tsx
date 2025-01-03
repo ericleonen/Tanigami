@@ -3,11 +3,12 @@ import Tile from "./Tile"
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Svg, { G } from "react-native-svg"
 import { StyleSheet, View } from "react-native"
-import { distanceBetweenPointsWorklet, isPointInsidePolygonWorklet, nearestGridPointWorklet, pointScaleWorklet, pointSumWorklet } from "@/geometry/point"
+import { distanceBetweenPointsWorklet, nearestGridPointWorklet, pointScaleWorklet, pointSumWorklet } from "@/geometry/point"
 import { PUZZLE } from "@/constants/puzzle"
 import { clampWorklet } from "@/geometry/number"
-import { getPolygonDimensionsWorklet, isPolygonInsideShapeWorklet } from "@/geometry/polygon"
+import { getPolygonDimensionsWorklet, isPointInsidePolygonWorklet } from "@/geometry/polygon"
 import { runOnJS, useSharedValue } from "react-native-reanimated"
+import { isPolygonInsideShapeWorklet } from "@/geometry/shape"
 
 type Props = {
     cellSize: number,

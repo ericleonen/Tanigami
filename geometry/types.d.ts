@@ -43,7 +43,11 @@ type Polygon = {
      * The number of rows and columns in grid cell units this polygon takes up. Do not access this
      * directly, but use getPolygonDimensions.
      */
-    dimensions?: Dimensions
+    dimensions?: Dimensions,
+    /**
+     * The area of this polygon. Do not acces this directly, but use getPolygonArea.
+     */
+    area?: number
 }
 
 /**
