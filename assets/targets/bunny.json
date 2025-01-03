@@ -2,13 +2,13 @@
     "shape": [
         {
             "id": "left_ear",
-            "origin": [2, 0], 
-            "vertices": [[0, 0], [2, 2], [0, 1]]
+            "origin": [3, 0], 
+            "vertices": [[0, 0], [1, 1], [1, 2], [0, 1]]
         },
         { 
             "id": "right_ear",
-            "origin": [4, 0], 
-            "vertices": [[0, 0], [1, 1], [0, 2]] 
+            "origin": [4, 1], 
+            "vertices": [[1, 0], [2, 0], [1, 1], [0, 1]] 
         },
         { 
             "id": "body",

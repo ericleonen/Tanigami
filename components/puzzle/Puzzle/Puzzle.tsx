@@ -4,7 +4,9 @@ import TargetShape from "./TargetShape";
 import bunny from "@/assets/targets/bunny.json";
 import Tiles from "./Tiles";
 import useLayoutSize from "@/hooks/useLayoutSize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { doesPolygonContainEdge } from "@/geometry/polygon";
+import { pointSum } from "@/geometry/point";
 
 const testTarget = bunny.shape as Shape;
 const testTiles: Polygon[] = [
@@ -43,6 +45,22 @@ export default function Puzzle() {
     const [target, setTarget] = useState<Shape>(testTarget);
     const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;
     const [targetHighlight, setTargetHighlight] = useState<Polygon | null>(null);
+
+    useEffect(() => {
+        // TODO: need to also check that the entire shape is filled
+        const solved = target.every(targetPolygon => {
+            const targetVertices = targetPolygon.vertices.map(vertex => pointSum(vertex, targetPolygon.origin));
+
+            return targetVertices.every((vertex, i) => {
+                const nextVertex = targetVertices[(i + 1) % targetVertices.length];
+                const edge: [Point, Point] = [vertex, nextVertex];
+
+                return tiles.some(tile => doesPolygonContainEdge(tile, edge));
+            });
+        });
+
+        if (solved) console.log("solved!");
+    }, [tiles, target]);
 
     return (
         <View

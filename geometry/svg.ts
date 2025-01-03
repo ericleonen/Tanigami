@@ -1,5 +1,5 @@
 /**
- * Returns a SVG points string used to draw the given Polygon.
+ * Returns a SVG points string used to draw the given polygon.
  */
 export function polygonToSvgPoints(polygon: Polygon, cellSize: number): string {
     const origin = polygon.origin || [0, 0];
