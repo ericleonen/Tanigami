@@ -1,7 +1,7 @@
 import { getGridPointsOnPolygonEdges, getPolygonArea, getPolygonEdges, isPointInsidePolygon, isPointOnPolygonEdges, standardizePolygon } from "@/geometry/polygon";
 import { randomlyChoose, uniformlyChoose } from "./random";
 import { createTileFromPolygon } from "./tiles";
-import { arePointsEqual, pointDifference, pointSum } from "@/geometry/point";
+import { arePointsEqual, pointSum } from "@/geometry/point";
 import { getLineSegmentMidpoint, getLineSegmentsFromPoints, isPointOnLineSegment } from "@/geometry/lineSegment";
 import * as Crypto from 'expo-crypto';
 
@@ -82,6 +82,9 @@ const walkDeltas: Point[] = [
     [-1, 1]
 ]
 
+/**
+ * Helper function that does the recursive work of randomlyBisectPolygon.
+ */
 function randomlyBisectPolygonHelper(
     polygon: Polygon,
     minArea: number,
@@ -133,6 +136,10 @@ function randomlyBisectPolygonHelper(
     return null;
 }
 
+/**
+ * Bisects the given polygon on a bisecting path (assumes that such path is valid) and returns two
+ * standardized polygons.
+ */
 export function bisectPolygonOnPath(polygon: Polygon, path: Point[]): [Polygon, Polygon] {
     const polygons: Polygon[] = [
         { id: Crypto.randomUUID(), origin: [0, 0], vertices: [] },
