@@ -1,5 +1,6 @@
 import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getGridPointsOnLineSegment, isLineSegmentInsideLineSegment } from "./lineSegment";
-import { isPointOnLineSegment, isPointOnLineSegmentWorklet, pointDifference, pointDifferenceWorklet, pointSum, pointSumWorklet } from "./point";
+import { pointDifference, pointSum, pointSumWorklet } from "./point";
+import { isPointOnLineSegment, isPointOnLineSegmentWorklet } from "./lineSegment"
 
 /**
  * Returns the dimensions (rows and columns) of the given polygon. 
@@ -200,25 +201,28 @@ export function doesPolygonContainEdge(polygon: Polygon, edge: LineSegment): boo
 }
 
 /**
- * Returns the area of the given polygon. 
+ * Returns the area of the given polygon. If signed is true (default false), the returned area is
+ * negative if the polygon is oriented counter clockwise, and positive if it is oriented clockwise.
  */
-export function getPolygonArea(polygon: Polygon): number {
-    if (polygon.area) return polygon.area;
+export function getPolygonArea(polygon: Polygon, signed = false): number {
+    if (polygon.signedArea) return polygon.signedArea;
 
-    polygon.area = 0;
+    polygon.signedArea = 0;
 
     polygon.vertices.forEach((currentVertex, i) => {
         const prevVertex = polygon.vertices[(i - 1 + polygon.vertices.length) % polygon.vertices.length];
         const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
 
-        polygon.area! += currentVertex[1] * (prevVertex[0] - nextVertex[0]);
+        polygon.signedArea! += currentVertex[1] * (prevVertex[0] - nextVertex[0]);
     });
 
-    return polygon.area /= 2;
+    polygon.signedArea /= 2;
+
+    return signed ? polygon.signedArea : Math.abs(polygon.signedArea);
 }
 
 /**
- * Returns a list of all grid points that lie on the given polygon
+ * Returns a list of all absolute grid points that lie on the given polygon.
  */
 export function getGridPointsOnPolygonEdges(polygon: Polygon): Point[] {
     return getPolygonEdges(polygon).reduce((points, edge) => {
@@ -227,4 +231,53 @@ export function getGridPointsOnPolygonEdges(polygon: Polygon): Point[] {
 
         return points;
     }, [] as Point[]);
+}
+
+/**
+ * Returns the given polygon with its vertices and origin standardized. The first vertex will have
+ * the least y value (and least x value if there are ties). All points are relative to this
+ * polygon's origin. The polygon's vertices are ordered in a clockwise fashion. The origin is the
+ * top left point of the polygon's box.
+ */
+export function standardizePolygon(polygon: Polygon): Polygon {
+    if (polygon.vertices.length <= 2) {
+        console.log(polygon.vertices);
+        throw Error();
+    }
+
+    const absoluteVertices = getAbsolutePolygonVertices(polygon);
+    const origin = absoluteVertices.reduce((originCandidate, vertex) => {
+        originCandidate[0] = Math.min(originCandidate[0], vertex[0]);
+        originCandidate[1] = Math.min(originCandidate[1], vertex[1]);
+
+        return originCandidate;
+    }, [Infinity, Infinity] as Point);
+    const relativeVertices = absoluteVertices.map(vertex => pointDifference(vertex, origin));
+    const firstVertex = relativeVertices.reduce((firstVertexCandidate, vertex) => {
+        if (vertex[1] < firstVertexCandidate[1]) {
+            return vertex;
+        } else if (vertex[1] === firstVertexCandidate[1] && vertex[0] < firstVertexCandidate[0]) {
+            return vertex;
+        } else {
+            return firstVertexCandidate;
+        }
+    }, [Infinity, Infinity] as Point);
+
+    while (firstVertex !== relativeVertices[0]) {
+        relativeVertices.push(relativeVertices.shift()!);
+    }
+
+    const standardizedPolygon: Polygon = {
+        id: polygon.id,
+        origin,
+        vertices: relativeVertices
+    };
+
+    if (getPolygonArea(standardizedPolygon, true) < 0) {
+        standardizedPolygon.vertices.reverse();
+        standardizedPolygon.vertices.unshift(standardizedPolygon.vertices.pop()!);
+        standardizedPolygon.signedArea = -standardizedPolygon.signedArea!;
+    }
+
+    return standardizedPolygon;
 }

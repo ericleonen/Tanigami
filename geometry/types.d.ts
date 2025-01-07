@@ -45,9 +45,10 @@ type Polygon = {
      */
     dimensions?: Dimensions,
     /**
-     * The area of this polygon. Do not acces this directly, but use getPolygonArea.
+     * The signed area of this polygon based on its orientation. Do not acces this directly, but
+     * use getPolygonArea.
      */
-    area?: number
+    signedArea?: number
 }
 
 /**

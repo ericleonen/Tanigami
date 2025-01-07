@@ -1,4 +1,28 @@
-import { isPointOnLineSegment, pointDifference, pointDifferenceWorklet } from "./point";
+import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
+import { distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointSum } from "./point";
+
+/**
+ * Returns true if the given point lies on the given line segment, false otherwise.
+ */
+export function isPointOnLineSegment(point: Point, lineSegment: LineSegment): boolean {
+    const d = distanceBetweenPoints(...lineSegment);
+    const d1 = distanceBetweenPoints(point, lineSegment[0]);
+    const d2 = distanceBetweenPoints(point, lineSegment[1]);
+
+    return isApproximatelyEqual(d, d1 + d2);
+}
+
+/**
+ * Returns true if the given point lies on the given line segment, false otherwise.
+ */
+export function isPointOnLineSegmentWorklet(point: Point, lineSegment: LineSegment): boolean {
+    "worklet";
+    const d = distanceBetweenPointsWorklet(...lineSegment);
+    const d1 = distanceBetweenPointsWorklet(point, lineSegment[0]);
+    const d2 = distanceBetweenPointsWorklet(point, lineSegment[1]);
+
+    return isApproximatelyEqualWorklet(d, d1 + d2);
+}
 
 /**
  * Returns true if the inner line segment lies inside the outer line segment.
@@ -91,4 +115,18 @@ export function getGridPointsOnLineSegment(lineSegment: LineSegment): Point[] {
     }
 
     return points;
+}
+
+export function getLineSegmentMidpoint(lineSegment: LineSegment): Point {
+    return pointScale(pointSum(...lineSegment), 0.5);
+}
+
+export function getLineSegmentsFromPoints(points: Point[]): LineSegment[] {
+    const lineSegments: LineSegment[] = [];
+
+    for (let i = 0; i < points.length - 1; i++) {
+        lineSegments.push([points[i], points[i + 1]]);
+    }
+
+    return lineSegments;
 }

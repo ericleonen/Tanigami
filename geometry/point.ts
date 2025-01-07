@@ -62,28 +62,9 @@ export function distanceBetweenPointsWorklet(point1: Point, point2: Point): numb
     return ((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2) ** 0.5;
 }
 
-/**
- * Returns true if the given point lies on the given line segment, false otherwise.
- */
-export function isPointOnLineSegment(point: Point, lineSegment: LineSegment): boolean {
-    const d = distanceBetweenPoints(...lineSegment);
-    const d1 = distanceBetweenPoints(point, lineSegment[0]);
-    const d2 = distanceBetweenPoints(point, lineSegment[1]);
-
-    return isApproximatelyEqual(d, d1 + d2);
-}
-
-/**
- * Returns true if the given point lies on the given line segment, false otherwise.
- */
-export function isPointOnLineSegmentWorklet(point: Point, lineSegment: LineSegment): boolean {
-    "worklet";
-    const d = distanceBetweenPointsWorklet(...lineSegment);
-    const d1 = distanceBetweenPointsWorklet(point, lineSegment[0]);
-    const d2 = distanceBetweenPointsWorklet(point, lineSegment[1]);
-
-    return isApproximatelyEqualWorklet(d, d1 + d2);
-}
+export function arePointsEqual(point1: Point, point2: Point): boolean {
+    return distanceBetweenPoints(point1, point2) === 0;
+} 
 
 /**
  * Returns the given point's (in grid cell units) nearest grid point.
