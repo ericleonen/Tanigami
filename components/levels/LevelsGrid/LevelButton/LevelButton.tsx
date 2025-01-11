@@ -21,7 +21,7 @@ const styles = StyleSheet.create({
     button: {
         height: "100%",
         aspectRatio: 1,
-        backgroundColor: "white",
+        backgroundColor: COLORS.white,
         alignItems: "center",
         borderWidth: 3,
         boxShadow: "4 4 0 " + COLORS.black,

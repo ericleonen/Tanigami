@@ -2,20 +2,16 @@ import { Stack } from "expo-router";
 import React from "react";
 import { StatusBar } from "expo-status-bar";
 import { COLORS } from "@/constants/colors";
+import TopAppBar from "@/components/TopAppBar";
 
 export default function RootLayout() {
 	return (
 		<>
 			<Stack
 				screenOptions={{
-					headerTitleStyle: {
-						fontWeight: 900,
-						color: COLORS.black
-					},
-					headerStyle: {
-						backgroundColor: "white"
-					},
-					headerShadowVisible: false,
+					header: (({ options }) => 
+						<TopAppBar title={options.title || ""}/>
+					)
 				}}
 			>
 				<Stack.Screen 

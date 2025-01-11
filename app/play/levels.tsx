@@ -22,8 +22,6 @@ export default function LevelsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        borderTopWidth: 3,
-        borderTopColor: COLORS.black,
         backgroundColor: COLORS.blue
     }
 });
