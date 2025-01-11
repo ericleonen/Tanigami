@@ -28,12 +28,28 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
+          "imageWidth": 400,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#87CEEB"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "node_modules/@expo-google-fonts/inter/Outfit_800ExtraBold.ttf",
+            "node_modules/@expo-google-fonts/inter/Outfit_700Bold.ttf",
+            "node_modules/@expo-google-fonts/inter/Outfit_500Regular.ttf"
+          ]
         }
       ]
     ],
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "imageSize": 400,
+      "backgroundColor": "#87CEEB"
+    },
     "experiments": {
       "typedRoutes": true
     }

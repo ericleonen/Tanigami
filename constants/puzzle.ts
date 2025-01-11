@@ -7,7 +7,8 @@ export const PUZZLE = {
         color: COLORS.lightgray,
         border: {
             color: COLORS.black,
-            thickness: 4
+            thickness: 4,
+            previewThickness: 2
         },
         grid: {
             color: COLORS.gray,
