@@ -1,4 +1,5 @@
 import { COLORS } from "@/constants/colors";
+import TYPOGRAPHY from "@/constants/type";
 import { Platform, StatusBar, StyleSheet, Text, View } from "react-native"
 
 type Props = {
@@ -25,7 +26,7 @@ const styles = StyleSheet.create({
         
     },
     title: {
-        fontWeight: 900,
-        fontSize: 24
+        fontSize: 24,
+        fontFamily: TYPOGRAPHY.black
     }
 });

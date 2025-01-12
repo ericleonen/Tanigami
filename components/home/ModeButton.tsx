@@ -2,6 +2,7 @@ import { Pressable, Text, StyleSheet, type StyleProp, type ViewStyle } from "rea
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { COLORS } from "@/constants/colors";
 import { Link, router, type Href } from "expo-router";
+import TYPOGRAPHY from "@/constants/type";
 
 type Props = {
     icon: keyof typeof FontAwesome5.glyphMap,
@@ -60,7 +61,7 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 28,
-        fontWeight: "bold",
+        fontFamily: TYPOGRAPHY.bold,
         opacity: 0.8
     }
 });

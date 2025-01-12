@@ -1,5 +1,6 @@
 import ModeButton from "@/components/home/ModeButton";
 import { COLORS } from "@/constants/colors";
+import TYPOGRAPHY from "@/constants/type";
 import { StyleSheet, View, Text } from "react-native";
 
 export default function HomeScreen() {
@@ -39,6 +40,6 @@ const styles = StyleSheet.create({
 	},
 	title: {
 		fontSize: 48,
-		fontWeight: 800
+		fontFamily: TYPOGRAPHY.black
 	}
 });

@@ -1,6 +1,7 @@
 import { COLORS } from "@/constants/colors"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import TargetPreview from "./TargetPreview"
+import TYPOGRAPHY from "@/constants/type"
 
 type Props = {
     level: Level
@@ -46,6 +47,6 @@ const styles = StyleSheet.create({
     levelText: {
         textAlign: "center",
         fontSize: 12,
-        fontWeight: 900
+        fontFamily: TYPOGRAPHY.black
     }
 })
