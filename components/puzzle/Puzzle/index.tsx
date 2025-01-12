@@ -1,3 +1,3 @@
-import Board from "./Puzzle";
+import Puzzle from "./Puzzle";
 
-export default Board;
+export default Puzzle;

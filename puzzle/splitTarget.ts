@@ -62,7 +62,9 @@ function randomlyBisectPolygon(
 ): [Polygon, Polygon] | null {
     const walkOriginCandidates = getGridPointsOnPolygonEdges(polygon);
 
-    for (const walkOrigin of walkOriginCandidates) {
+    while (walkOriginCandidates.length > 0) {
+        const walkOrigin = walkOriginCandidates.splice(uniformlyChoose(walkDeltas.length), 1)[0];
+        
         const result = randomlyBisectPolygonHelper(polygon, minArea, [walkOrigin]);
 
         if (result) return result;

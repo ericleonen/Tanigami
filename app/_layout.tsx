@@ -31,7 +31,8 @@ export default function RootLayout() {
 				screenOptions={{
 					header: (({ options }) => 
 						<TopAppBar title={options.title || ""}/>
-					)
+					),
+					animation: "none"
 				}}
 			>
 				<Stack.Screen 
