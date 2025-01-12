@@ -1,20 +1,29 @@
 import { COLORS } from "@/constants/colors"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { StyleSheet, Text, View } from "react-native"
 import TargetPreview from "./TargetPreview"
 import TYPOGRAPHY from "@/constants/type"
+import Button from "@/components/ui/Button"
+import { router } from "expo-router"
 
 type Props = {
     level: Level
 }
 
 export default function LevelButton({ level }: Props) {
+    const onPress = () => {
+        router.push(`/play/levels/${level.index}`);
+    }
+
     return (
-        <Pressable style={styles.button}>
+        <Button 
+            onPress={onPress}
+            containerStyle={styles.button}
+        >
             <View style={styles.levelCircle}>
                 <Text style={styles.levelText}>{level.index}</Text>
             </View>
             <TargetPreview target={level.target} />
-        </Pressable>
+        </Button>
     )
 }
 
@@ -24,8 +33,6 @@ const styles = StyleSheet.create({
         aspectRatio: 1,
         backgroundColor: COLORS.white,
         alignItems: "center",
-        borderWidth: 3,
-        boxShadow: "4 4 0 " + COLORS.black,
         padding: 4,
         position: "relative"
     },

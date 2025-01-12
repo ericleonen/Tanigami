@@ -12,7 +12,7 @@ export default function HomeScreen() {
 					icon="play"
 					label="Levels"
 					color={COLORS.yellow}
-					href="./play/levels"
+					href="./play/levelSelector"
 				/>
 				<ModeButton 
 					icon="infinity"

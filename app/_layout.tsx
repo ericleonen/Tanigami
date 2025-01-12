@@ -41,7 +41,7 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen 
-					name="play/levels"
+					name="play/levelSelector"
 					options={{
 						title: "LEVELS"
 					}}

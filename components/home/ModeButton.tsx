@@ -1,37 +1,32 @@
-import { Pressable, Text, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
+import { Text, StyleSheet, type StyleProp, type ViewStyle } from "react-native";
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { COLORS } from "@/constants/colors";
-import { Link, router, type Href } from "expo-router";
+import { router, type Href } from "expo-router";
 import TYPOGRAPHY from "@/constants/type";
+import Button from "../ui/Button";
 
 type Props = {
     icon: keyof typeof FontAwesome5.glyphMap,
     label: string,
-    color: typeof COLORS[keyof typeof COLORS],
+    color: string,
     href: Href,
     style?: StyleProp<ViewStyle>
 }
 
 export default function ModeButton({ icon, label, color, href, style }: Props) {
     const onPress = () => {
-        router.replace(href);
+        router.push(href);
     }
     
     return (
-        <Pressable
-            style={({ pressed }) => [
+        <Button
+            onPress={onPress}
+            containerStyle={[
                 styles.button,
-                { 
-                    backgroundColor: color,
-                    transform: [
-                        { scale: pressed ? 0.95 : 1 }
-                    ]
-                },
+                { backgroundColor: color },
                 style
             ]}
-            onPress={onPress}
         >
-            
             <FontAwesome5
                 style={styles.icon}
                 name={icon}
@@ -40,7 +35,7 @@ export default function ModeButton({ icon, label, color, href, style }: Props) {
             <Text style={styles.label}>
                 {label}
             </Text>
-        </Pressable>
+        </Button>
     )
 }
 
@@ -49,10 +44,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         padding: 16,
-        width: "100%",
-        borderWidth: 3,
-        borderColor: COLORS.black,
-        boxShadow: "4 4 0 " + COLORS.black
+        width: "100%"
     },
     icon: {
         marginHorizontal: 12,
