@@ -24,7 +24,7 @@ export const PUZZLE = {
         },
         animation: {
             damping: 20,
-            stiffness: 300
+            stiffness: 200
         }
     }
 }

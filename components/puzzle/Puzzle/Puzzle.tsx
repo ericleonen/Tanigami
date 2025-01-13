@@ -1,9 +1,9 @@
-import { StyleSheet, View } from "react-native";
+import { Dimensions, StyleSheet, View } from "react-native";
 import { PUZZLE } from "@/constants/puzzle";
 import TargetShape from "./TargetShape";
 import Tiles from "./Tiles";
 import useLayoutSize from "@/hooks/useLayoutSize";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useIsPuzzleSolved from "@/components/puzzle/Puzzle/hooks/useIsPuzzleSolved";
 import splitTarget from "@/puzzle/splitTarget";
 
@@ -48,7 +48,7 @@ export default function Puzzle({ target, initialTiles }: Props) {
                 setTargetHighlight={setTargetHighlight}
             />
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
