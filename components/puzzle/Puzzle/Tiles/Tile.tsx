@@ -1,9 +1,9 @@
 import { PUZZLE } from "@/constants/puzzle";
 import { Polygon as SvgPolygon } from "react-native-svg";
 import { polygonToSvgPoints } from "@/geometry/svg";
-import Animated, { SharedValue, useAnimatedProps, withSpring } from "react-native-reanimated";
+import Animated, { SharedValue, useAnimatedProps, useSharedValue, withSpring } from "react-native-reanimated";
 import { pointScaleWorklet, pointSumWorklet } from "@/geometry/point";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 const AnimatedPolygon = Animated.createAnimatedComponent(SvgPolygon);
 
@@ -14,6 +14,14 @@ type Props = {
 };
 
 export default function Tile({ cellSize, tile, animatedTranslation }: Props) {
+    const hasBeenDragged = useSharedValue(false);
+
+    useEffect(() => {
+        if (animatedTranslation !== undefined) {
+            hasBeenDragged.value = true;
+        }
+    }, [animatedTranslation !== undefined]);
+
     const svgPoints = useMemo(() => polygonToSvgPoints({
         ...tile,
         origin: [0, 0]
@@ -27,12 +35,27 @@ export default function Tile({ cellSize, tile, animatedTranslation }: Props) {
 
         const translate = pointScaleWorklet(origin, cellSize);
 
-        return {
-            transform: [
-                { translateX: withSpring(translate[0], PUZZLE.tile.animation) },
-                { translateY: withSpring(translate[1], PUZZLE.tile.animation) }
-            ]
-        };
+        if (hasBeenDragged.value) {
+            return {
+                transform: [
+                    { translateX: withSpring(translate[0], PUZZLE.tile.animation) },
+                    { translateY: withSpring(translate[1], PUZZLE.tile.animation) }
+                ],
+                opacity: 1
+            };
+        } else if (cellSize) {
+            return {
+                transform: [
+                    { translateX: translate[0] },
+                    { translateY: translate[1] }
+                ],
+                opacity: 1
+            };
+        } else {
+            return {
+                opacity: 0
+            };
+        }
     });
 
     return (

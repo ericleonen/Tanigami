@@ -32,7 +32,7 @@ export default function RootLayout() {
 					header: (({ options }) => 
 						<TopAppBar title={options.title || ""}/>
 					),
-					animation: "none"
+					animation: "none",
 				}}
 			>
 				<Stack.Screen 
@@ -44,7 +44,7 @@ export default function RootLayout() {
 				<Stack.Screen 
 					name="play/levelSelector"
 					options={{
-						title: "LEVELS"
+						title: "LEVELS",
 					}}
 				/>
 			</Stack>
