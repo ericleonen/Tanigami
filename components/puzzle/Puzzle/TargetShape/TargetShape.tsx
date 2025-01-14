@@ -1,9 +1,10 @@
 import { PUZZLE } from "@/constants/puzzle";
 import { polygonToSvgPoints } from "@/geometry/svg";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import Svg, { ClipPath, Defs, G, Polygon as SvgPolygon } from "react-native-svg";
 import Grid from "./Grid";
 import { getPolygonDimensions } from "@/geometry/polygon";
+import * as Haptics from 'expo-haptics';
 
 type Props = {
     cellSize: number,
@@ -21,6 +22,12 @@ export default function TargetShape({ cellSize, svgWidth, svgMargin, target, tar
             opacity={PUZZLE.tile.highlightOpacity}
         />
     ) : null;
+
+    useEffect(() => {
+        if (targetHighlight) {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        }
+    }, [targetHighlight]);
     
     const polygons = target.map(polygon => {
         const key = polygon.id;
