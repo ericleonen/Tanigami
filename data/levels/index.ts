@@ -1,9 +1,21 @@
-import bunny from "../targets/bunny.json";
+import bunny from "../targets/json/bunny.json";
+import dancing_person from "../targets/json/dancing_person.json"
+import silly_person from "../targets/json/silly_person.json"
 
-const bunnyShape = bunny.shape as Shape;
-
-export const LEVELS: Level[] = Array.from(Array(100)).map((_, i) => ({
-    index: i + 1,
-    target: bunnyShape,
-    tiles: []
-}))
+export const LEVELS: Level[] = [
+    {
+        index: 1,
+        target: bunny as Shape,
+        tiles: []
+    },
+    {
+        index: 2,
+        target: dancing_person as Shape,
+        tiles: []
+    },
+    {
+        index: 3,
+        target: silly_person as Shape,
+        tiles: []
+    }
+]
