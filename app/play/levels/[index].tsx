@@ -9,7 +9,7 @@ export default function LevelScreen() {
     return (
         <Puzzle 
             target={level.target}
-            initialTiles={splitTarget(level.target, 1, 3, 3)}
+            initialTiles={splitTarget(level.target, 1, 5, 3)}
         />
     )
 }
