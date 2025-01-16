@@ -1,6 +1,7 @@
-import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getGridPointsOnLineSegment, isLineSegmentInsideLineSegment } from "./lineSegment";
-import { pointDifference, pointSum, pointSumWorklet } from "./point";
+import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, isLineSegmentInsideLineSegment } from "./lineSegment";
+import { arePointsEqual, pointDifference, pointSum, pointSumWorklet } from "./point";
 import { isPointOnLineSegment, isPointOnLineSegmentWorklet } from "./lineSegment"
+import { getAngleBetweenVectors } from "./vector";
 
 /**
  * Returns the dimensions (rows and columns) of the given polygon. 
@@ -63,10 +64,10 @@ export function getAbsolutePolygonVerticesWorklet(polygon: Polygon): Point[] {
 }
 
 /**
- * Returns a list of absolute edges of the given polygon.
+ * Returns a list of absolute (or relative) edges of the given polygon.
  */
-export function getPolygonEdges(polygon: Polygon): LineSegment[] {
-    const vertices = getAbsolutePolygonVertices(polygon);
+export function getPolygonEdges(polygon: Polygon, relative = false): LineSegment[] {
+    const vertices = relative ? polygon.vertices : getAbsolutePolygonVertices(polygon);
 
     return vertices.map((vertex, i) => {
         const nextVertex = vertices[(i + 1) % vertices.length];
@@ -280,4 +281,73 @@ export function standardizePolygon(polygon: Polygon): Polygon {
     }
 
     return standardizedPolygon;
+}
+
+/**
+ * Returns true if the given line segment intersect an edge of the given polygon at a finite number
+ * of points on the line segment's interior.
+ */
+function doesLineSegmentIntersectPolygonEdges(lineSegment: LineSegment, polygon: Polygon): boolean {
+    return getPolygonEdges(polygon).some(edge =>
+        doLineSegmentsIntersect(lineSegment, edge)
+    ) || getAbsolutePolygonVertices(polygon).some(vertex =>
+        isPointOnLineSegment(vertex, lineSegment, false)
+    );
+}
+
+/**
+ * Returns true if the given line segment lies on the interior of the given polygon.
+ */
+export function isLineSegmentInsidePolygon(lineSegment: LineSegment, polygon: Polygon) {
+    return !doesLineSegmentIntersectPolygonEdges(lineSegment, polygon) &&
+        isPointInsidePolygon(getLineSegmentMidpoint(lineSegment), polygon) &&
+        !getPolygonEdges(polygon).some(edge => 
+            isLineSegmentInsideLineSegment(lineSegment, edge) ||
+            isLineSegmentInsideLineSegment(edge, lineSegment)
+        );
+}
+
+/**
+ * Returns the smallest interior or exterior angle of the given polygon in degrees.
+ */
+export function getSmallestAngleOfPolygon(polygon: Polygon): number {
+    let smallestAngle = Infinity;
+    const numVertices = polygon.vertices.length;
+
+    polygon.vertices.forEach((vertex, vertexIndex) => {
+        const nextVertex = polygon.vertices[(vertexIndex + 1) % numVertices];
+        const prevVertex = polygon.vertices[(vertexIndex - 1 + numVertices) % numVertices];
+
+        const vector1 = pointDifference(nextVertex, vertex) as Vector;
+        const vector2 = pointDifference(prevVertex, vertex) as Vector;
+
+        const angle = getAngleBetweenVectors(vector1, vector2);
+
+        smallestAngle = Math.min(smallestAngle, angle, 360 - angle);
+    });
+
+    return smallestAngle;
+}
+
+export function getSmallestWidthOfPolygon(polygon: Polygon): number {
+    let smallestWidth = Infinity;
+
+    getPolygonEdges(polygon, true).forEach(edge => {
+        polygon.vertices.forEach(vertex => {
+            if (arePointsEqual(vertex, edge[0]) || arePointsEqual(vertex, edge[1])) return;
+
+            const vertexEdgeDistance = getDistanceBetweenPointAndLineSegment(vertex, edge);
+
+            smallestWidth = Math.min(
+                smallestWidth,
+                vertexEdgeDistance
+            );
+        })
+    });
+
+    return smallestWidth;
+}
+
+export function getShortestLineSegmentBetweenPolygonsEdges(polygon1: Polygon, polygon2: Polygon): Vector {
+    return [0, 0];
 }

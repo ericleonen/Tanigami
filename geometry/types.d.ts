@@ -6,9 +6,21 @@
 type Point = [number, number];
 
 /**
+ * A 2-tuple specifying the x and y components of a vector.
+ */
+type Vector = [number, number];
+
+/**
  * A 2-tuple specifying the two endpoints of a line segment.
  */
 type LineSegment = [Point, Point];
+
+/**
+ * A box defined by an absolute origin and its dimensions.
+ */
+type Box = {
+    origin: Point,
+} & Dimensions
 
 /**
  * A 2-tuple specifying the bounds of an interval.

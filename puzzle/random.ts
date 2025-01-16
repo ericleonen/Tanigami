@@ -22,3 +22,7 @@ export function uniformlyChoose(n: number): number {
 export function uniformlyChooseFromList<T>(list: T[]): T {
     return list[uniformlyChoose(list.length)];
 }
+
+export function uniform(min = 0, max = 0): number {
+    return Math.random() * (max - min) + min;
+}

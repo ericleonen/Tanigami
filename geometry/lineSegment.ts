@@ -1,13 +1,18 @@
 import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
 import { distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointSum } from "./point";
+import { dot, getVectorMagnitude } from "./vector";
 
 /**
  * Returns true if the given point lies on the given line segment, false otherwise.
  */
-export function isPointOnLineSegment(point: Point, lineSegment: LineSegment): boolean {
+export function isPointOnLineSegment(point: Point, lineSegment: LineSegment, includeEndpoints = true): boolean {
     const d = distanceBetweenPoints(...lineSegment);
     const d1 = distanceBetweenPoints(point, lineSegment[0]);
     const d2 = distanceBetweenPoints(point, lineSegment[1]);
+
+    if (d1 === 0 || d2 === 0) {
+        return includeEndpoints;
+    }
 
     return isApproximatelyEqual(d, d1 + d2);
 }
@@ -117,16 +122,61 @@ export function getGridPointsOnLineSegment(lineSegment: LineSegment): Point[] {
     return points;
 }
 
+/**
+ * Returns the midpoint of the given line segment.
+ */
 export function getLineSegmentMidpoint(lineSegment: LineSegment): Point {
     return pointScale(pointSum(...lineSegment), 0.5);
 }
 
-export function getLineSegmentsFromPoints(points: Point[]): LineSegment[] {
-    const lineSegments: LineSegment[] = [];
+/**
+ * Returns the point on the given line segment closest to the given point.
+ */
+export function getNearestPointOnLineSegmentToPoint(point: Point, lineSegment: LineSegment): Point {
+    const p = pointDifference(point, lineSegment[0]) as Vector;
+    const l = pointDifference(lineSegment[1], lineSegment[0]) as Vector;
 
-    for (let i = 0; i < points.length - 1; i++) {
-        lineSegments.push([points[i], points[i + 1]]);
+    const t = dot(p, l) / getVectorMagnitude(l)**2;
+
+    if (t <= 0) {
+        return lineSegment[0];
+    } else if (t >= 1) {
+        return lineSegment[1];
+    } else {
+        return pointSum(lineSegment[0], pointScale(l, t));
+    }
+}
+
+export function getDistanceBetweenPointAndLineSegment(point: Point, lineSegment: LineSegment): number {
+    const nearestPoint = getNearestPointOnLineSegmentToPoint(point, lineSegment);
+
+    return distanceBetweenPoints(point, nearestPoint);
+}
+
+export function getShortestLineSegmentBetweenLineSegments(
+    lineSegment1: LineSegment, 
+    lineSegment2: LineSegment
+): LineSegment {
+    const points = [
+        getNearestPointOnLineSegmentToPoint(lineSegment1[0], lineSegment2),
+        getNearestPointOnLineSegmentToPoint(lineSegment1[1], lineSegment2),
+        getNearestPointOnLineSegmentToPoint(lineSegment2[0], lineSegment1),
+        getNearestPointOnLineSegmentToPoint(lineSegment2[1], lineSegment1)
+    ];
+
+    let shortestDistance = Infinity;
+    let closestPair: LineSegment = [points[0], points[1]];
+
+    for (let i = 0; i < points.length; i++) {
+        for (let j = i + 1; j < points.length; j++) {
+            const distance = distanceBetweenPoints(points[i], points[j]);
+            if (distance < shortestDistance) {
+                shortestDistance = distance;
+                closestPair = [points[i], points[j]];
+            }
+        }
     }
 
-    return lineSegments;
+    return closestPair;
 }
+

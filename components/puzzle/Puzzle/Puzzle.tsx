@@ -18,6 +18,7 @@ const svgMargin = Math.max(
 );
 
 export default function Puzzle({ target, initialTiles }: Props) {
+
     const { layoutSize: svgSize, handleLayout } = useLayoutSize(PUZZLE.screenPadding);
 
     const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;

@@ -1,33 +1,40 @@
-import { getGridPointsOnPolygonEdges, getPolygonArea, getPolygonEdges, isPointInsidePolygon, isPointOnPolygonEdges, standardizePolygon } from "@/geometry/polygon";
+import { getGridPointsOnPolygonEdges, getPolygonArea, getPolygonEdges, getSmallestAngleOfPolygon, getSmallestWidthOfPolygon, isLineSegmentInsidePolygon, standardizePolygon } from "@/geometry/polygon";
+import { createTileFromPolygon } from "./tiles"
 import { randomlyChoose, uniformlyChoose } from "./random";
-import { createTileFromPolygon } from "./tiles";
-import { arePointsEqual, pointSum } from "@/geometry/point";
-import { getLineSegmentMidpoint, getLineSegmentsFromPoints, isPointOnLineSegment } from "@/geometry/lineSegment";
-import * as Crypto from 'expo-crypto';
+import * as Crypto from "expo-crypto";
+import { isPointOnLineSegment } from "@/geometry/lineSegment";
+import { arePointsEqual } from "@/geometry/point";
 
 /**
- * Splits the given target shape into several tile polygons. Any polygon that makes up the target
- * shape with an area smaller than minArea becomes a tile. The other polygons are randomly split
- * into tiles with areas that are at least minArea. Tries to make the number of tiles be exactly
- * numTiles, but will return more or fewer if the random splits make that impossible.
- * 
- * Use larger gamma (default 1) to increase the likelihoods of larger polygons gettings split.
+ * Splits the given target shape into tiles. The resulting tiles will be positioned so that they
+ * fill the target shape.
  */
 export default function splitTarget(
     target: Shape,
-    minArea: number,
-    numTiles: number,
-    gamma = 1
+    config: {
+        /**
+         * The desired number of tiles. There may end up being slightly more or less tiles
+         * depending on the given target shape.
+         */
+        numTiles: number,
+        /**
+         * A parameter that, for larger values, makes it more likely larger polygons get split and,
+         * for smaller values, makes all polygons more equally likely to get split.
+         */
+        gamma: number
+    } & PolygonBisectionConfig
 ): Polygon[] {
-    if (target.length >= numTiles) {
-        return target.map(targetPolygon => createTileFromPolygon(targetPolygon));
+    if (target.length >= config.numTiles) {
+        return target.map(targetPolygon =>
+            createTileFromPolygon(targetPolygon)
+        );
     }
 
     const tiles: Polygon[] = [];
     const polygons: Polygon[] = [];
 
     target.forEach(targetPolygon => {
-        if (getPolygonArea(targetPolygon) < 2 * minArea) {
+        if (getPolygonArea(targetPolygon) < 2 * config.minArea) {
             tiles.push(createTileFromPolygon(targetPolygon));
         } else {
             polygons.push(targetPolygon);
@@ -36,10 +43,14 @@ export default function splitTarget(
 
     if (polygons.length === 0) return tiles;
 
-    const polygonLikelihoods = polygons.map(polygon => getPolygonArea(polygon) ** gamma);
+    const polygonLikelihoods = polygons.map(polygon => getPolygonArea(polygon) ** config.gamma);
     const polygonToBisect = polygons.splice(randomlyChoose(polygonLikelihoods), 1)[0];
 
-    const bisectionResult = randomlyBisectPolygon(polygonToBisect, minArea);
+    const bisectionResult = randomlyBisectPolygon(polygonToBisect, {
+        minArea: config.minArea,
+        minAngle: config.minAngle,
+        minWidth: config.minWidth
+    });
 
     if (bisectionResult) {
         polygons.push(...bisectionResult);
@@ -47,91 +58,78 @@ export default function splitTarget(
         tiles.push(createTileFromPolygon(polygonToBisect));
     }
 
-    tiles.push(...splitTarget(polygons, minArea, numTiles - tiles.length, gamma));
+    tiles.push(...splitTarget(polygons, {
+        ...config,
+        numTiles: config.numTiles - tiles.length
+    }));
 
     return tiles;
 }
 
+type PolygonBisectionConfig = {
+    /**
+     * The minimum desired area of a tile. If a polygon of a target shape has an area smaller than
+     * this, that polygon becomes a tile.
+     */
+    minArea: number,
+    /**
+     * The minimum smallest angle in a tile's interior or exterior. If a polygon of a shape has an
+     * interior or exterior angle smaller than this, that polygon becomes a tile.
+     */
+    minAngle: number,
+    /**
+     * The minimum smallest width (distance between two non-adjacent edges) in a tile. If a polygon
+     * of a shape has a width smaller than this, that polygon becomes a tile.
+     */
+    minWidth: number
+}
+
 /**
- * Randomly bisects the given polygon. If no bisection can give each split polygon an area of
- * minArea, returns null. If there is, returns a 2-tuple of polygons.
+ * Randomly bisects the given polygon along grid points on the polygon's edges. If, with the given 
+ * config, this is impossible, returns null. Otherwise, returns the two resulting polygons.
  */
 function randomlyBisectPolygon(
     polygon: Polygon,
-    minArea: number
+    config: PolygonBisectionConfig
 ): [Polygon, Polygon] | null {
-    const walkOriginCandidates = getGridPointsOnPolygonEdges(polygon);
+    const bisectionEndpoints = getGridPointsOnPolygonEdges(polygon);
 
-    while (walkOriginCandidates.length > 0) {
-        const walkOrigin = walkOriginCandidates.splice(uniformlyChoose(walkDeltas.length), 1)[0];
+    while (bisectionEndpoints.length > 0) {
+        const bisectionOrigin = bisectionEndpoints.splice(uniformlyChoose(bisectionEndpoints.length), 1)[0];
         
-        const result = randomlyBisectPolygonHelper(polygon, minArea, [walkOrigin]);
-
+        const result = randomlyBisectPolygonHelper(polygon, bisectionOrigin, [...bisectionEndpoints], config);
+    
         if (result) return result;
     }
 
     return null;
 }
 
-const walkDeltas: Point[] = [
-    [0, 1],
-    [1, 1],
-    [1, 0],
-    [1, -1],
-    [0, -1],
-    [-1, -1],
-    [-1, 0],
-    [-1, 1]
-]
-
 /**
- * Helper function that does the recursive work of randomlyBisectPolygon.
+ * Randomly bisects the given polygon from the given bisection origin to one of the bisection
+ * endpoints. If, with the given config, this is impossible, returns null. Otherwise, returns the
+ * two resulting polygons.
  */
 function randomlyBisectPolygonHelper(
     polygon: Polygon,
-    minArea: number,
-    path: Point[]
+    bisectionOrigin: Point,
+    bisectionEndpoints: Point[],
+    config: PolygonBisectionConfig
 ): [Polygon, Polygon] | null {
-    if (path.length >= 2 && isPointOnPolygonEdges(path[path.length - 1], polygon)) {
-        const [polygon1, polygon2] = bisectPolygonOnPath(polygon, path);
+    while (bisectionEndpoints.length > 0) {
+        const bisectionEnd = bisectionEndpoints.splice(uniformlyChoose(bisectionEndpoints.length), 1)[0];
+        const bisectionLineSegment: LineSegment = [bisectionOrigin, bisectionEnd];
 
-        if (Math.min(getPolygonArea(polygon1), getPolygonArea(polygon2)) >= minArea) {
-            return [polygon1, polygon2];
-        } else {
-            return null;
-        }
-    }
+        if (!isLineSegmentInsidePolygon(bisectionLineSegment, polygon)) continue;
 
-    const possibleWalkDeltas = [...walkDeltas];
-    const currentPoint = path[path.length - 1];
+        const [polygon1, polygon2] = bisectPolygonOnPath(polygon, bisectionLineSegment);
 
-    while (possibleWalkDeltas.length > 0) {
-        const walkDelta = possibleWalkDeltas.splice(uniformlyChoose(possibleWalkDeltas.length), 1)[0];
-        const nextPoint = pointSum(currentPoint, walkDelta);
-        const pathDelta: LineSegment = [currentPoint, nextPoint];
-        const midpoint = getLineSegmentMidpoint(pathDelta);
-
-        // do not allow path to self-intersect
         if (
-            path.some(pathPoint => arePointsEqual(pathPoint, nextPoint)) || 
-            getLineSegmentsFromPoints(path).some(
-                pathLineSegment => isPointOnLineSegment(midpoint, pathLineSegment)
-            )
+            Math.min(getPolygonArea(polygon1), getPolygonArea(polygon2)) >= config.minArea &&
+            Math.min(getSmallestAngleOfPolygon(polygon1), getSmallestAngleOfPolygon(polygon2)) >= config.minAngle &&
+            Math.min(getSmallestWidthOfPolygon(polygon1), getSmallestWidthOfPolygon(polygon2)) >= config.minWidth
         ) {
-            continue;
-        }
-
-        if (isPointInsidePolygon(midpoint, polygon, false)) {
-            path.push(nextPoint);
-            const bisectedPolygons = randomlyBisectPolygonHelper(
-                polygon,
-                minArea,
-                simplifyPath(path)
-            );
-
-            if (bisectedPolygons) return bisectedPolygons;
-            
-            path.pop()
+            return [polygon1, polygon2];
         }
     }
 
@@ -174,16 +172,4 @@ export function bisectPolygonOnPath(polygon: Polygon, path: Point[]): [Polygon, 
     });
 
     return polygons.map(standardizePolygon) as [Polygon, Polygon];
-}
-
-function simplifyPath(path: Point[]): Point[] {
-    const simplePath = [...path];
-
-    for (let i = simplePath.length - 2; i >= 1; i--) {
-        if (isPointOnLineSegment(simplePath[i], [simplePath[i - 1], simplePath[i + 1]])) {
-            simplePath.splice(i, 1);
-        }
-    }
-
-    return simplePath;
 }
