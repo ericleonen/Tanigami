@@ -1,5 +1,5 @@
 import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, isLineSegmentInsideLineSegment } from "./lineSegment";
-import { arePointsEqual, pointDifference, pointSum, pointSumWorklet } from "./point";
+import { arePointsEqual, pointDifference, pointScale, pointSum, pointSumWorklet } from "./point";
 import { isPointOnLineSegment, isPointOnLineSegmentWorklet } from "./lineSegment"
 import { getAngleBetweenVectors } from "./vector";
 
@@ -348,6 +348,23 @@ export function getSmallestWidthOfPolygon(polygon: Polygon): number {
     return smallestWidth;
 }
 
-export function getShortestLineSegmentBetweenPolygonsEdges(polygon1: Polygon, polygon2: Polygon): Vector {
-    return [0, 0];
+/**
+ * Returns the (default) absolute or relative centroid of the given polygon.
+ */
+export function getPolygonCentroid(polygon: Polygon, absolute = true): Point {
+    if (polygon.centroid) {
+        if (absolute) {
+            return pointSum(polygon.origin, polygon.centroid);
+        } else {
+            return polygon.centroid;
+        }
+    } else {
+        const centroid: Point = pointScale(polygon.vertices.reduce((prevVertex, currentVertex) =>
+            pointSum(prevVertex, currentVertex)
+        ), 1 / polygon.vertices.length);
+
+        polygon.centroid = centroid;
+
+        return getPolygonCentroid(polygon, absolute);
+    }
 }

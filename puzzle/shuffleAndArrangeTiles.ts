@@ -1,16 +1,31 @@
-import { getPolygonDimensions } from "@/geometry/polygon";
+import { getPolygonCentroid, getPolygonDimensions } from "@/geometry/polygon";
 import { uniform } from "./random";
+import { pointDifference, pointScale, pointSum } from "@/geometry/point";
+import { getVectorMagnitude } from "@/geometry/vector";
+import { clamp } from "@/geometry/number";
+
+type ArrangeTilesConfig = {
+    alpha: number,
+    maxSteps: number
+}
 
 /**
- * Returns copies of the given tiles that lie inside the given bounding box. Attempts to arrange
- * all tiles so they are at least tileMargin apart, but this is not guarenteed.
+ * Returns copies of the given tiles that lie inside the given bounding box.
  */
 export default function shuffleAndArrangeTiles(
     tiles: Polygon[],
     boundingBox: Box,
-    tileMargin: number
+    config: ArrangeTilesConfig
 ): Polygon[] {
     tiles = shuffleTiles(tiles, boundingBox);
+
+    for (let i = 0; i < config.maxSteps; i++) {
+        const tookStep = arrangeTilesStep(tiles, config);
+
+        if (!tookStep) break;
+
+        clampTilesToBoundary(tiles, boundingBox);
+    }
 
     return tiles;
 }
@@ -38,5 +53,58 @@ function shuffleTiles(tiles: Polygon[], boundingBox: Box): Polygon[] {
             ...tile,
             origin
         };
+    });
+}
+
+function arrangeTilesStep(tiles: Polygon[], config: ArrangeTilesConfig): boolean {
+    const deltas: Vector[] = tiles.map(() => [0, 0]);
+    let tookStep = false;
+
+    tiles.forEach((tile1, tile1Index) => {
+        const centroid1 = getPolygonCentroid(tile1);
+
+        tiles.forEach((tile2, tile2Index) => {
+            if (tile1.id === tile2.id) return;
+
+            const centroid2 = getPolygonCentroid(tile2);
+
+            let vector1: Vector = pointDifference(centroid1, centroid2);
+            const r = getVectorMagnitude(vector1);
+            vector1 = pointScale(vector1, Math.exp(-r) / r)
+            // const vector2: Vector = pointScale(vector1, -1);
+
+            deltas[tile1Index] = pointSum(deltas[tile1Index], vector1);
+            deltas[tile2Index] = pointDifference(deltas[tile2Index], vector1);
+        });
+    });
+
+    tiles.forEach((tile, tileIndex) => {
+        const delta: Vector = deltas[tileIndex];
+        const deltaMagnitude = getVectorMagnitude(delta);
+
+        if (deltaMagnitude < config.alpha) return;
+
+        const step: Vector = pointScale(delta, config.alpha / deltaMagnitude);
+
+        tile.origin = pointSum(tile.origin, step);
+
+        tookStep = true;
+    });
+
+    return tookStep;
+}
+
+function clampTilesToBoundary(tiles: Polygon[], boundingBox: Box): void {
+    tiles.forEach(tile => {
+        const tileDimensions = getPolygonDimensions(tile);
+
+        const minX = boundingBox.origin[0];
+        const maxX = minX + boundingBox.columns - tileDimensions.columns;
+
+        const minY = boundingBox.origin[1];
+        const maxY = minY + boundingBox.rows - tileDimensions.rows;
+
+        tile.origin[0] = clamp(tile.origin[0], [minX, maxX]);
+        tile.origin[1] = clamp(tile.origin[1], [minY, maxY]);
     });
 }

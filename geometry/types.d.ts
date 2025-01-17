@@ -57,10 +57,14 @@ type Polygon = {
      */
     dimensions?: Dimensions,
     /**
-     * The signed area of this polygon based on its orientation. Do not acces this directly, but
+     * The signed area of this polygon based on its orientation. Do not access this directly, but
      * use getPolygonArea.
      */
-    signedArea?: number
+    signedArea?: number,
+    /**
+     * The relative centroid of this polygon. Do not access this directly, but use getPolygonCentroid.
+     */
+    centroid?: Point
 }
 
 /**

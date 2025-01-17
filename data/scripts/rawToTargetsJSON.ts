@@ -27,6 +27,7 @@ function rawToTargetsJSON(): void {
             });
             polygon.dimensions = undefined;
             polygon.signedArea = undefined;
+            polygon.centroid = undefined;
 
             return polygon;
         });
