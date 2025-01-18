@@ -1,7 +1,8 @@
-import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, isLineSegmentInsideLineSegment } from "./lineSegment";
+import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, getLineSegmentMidpointWorklet, isLineSegmentInsideLineSegment } from "./lineSegment";
 import { arePointsEqual, pointDifference, pointScale, pointSum, pointSumWorklet } from "./point";
 import { isPointOnLineSegment, isPointOnLineSegmentWorklet } from "./lineSegment"
 import { getAngleBetweenVectors } from "./vector";
+import { clamp, clampWorklet } from "./number";
 
 /**
  * Returns the dimensions (rows and columns) of the given polygon. 
@@ -157,9 +158,13 @@ export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon, incl
  */
 export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: Polygon): boolean {
     const insideVertices = getAbsolutePolygonVertices(insidePolygon);
+    const insideEdgeMidpoints = getPolygonEdges(insidePolygon).map(getLineSegmentMidpoint);
 
     // all points of the inside polygon are inside the outside polygon
-    if (insideVertices.some(vertex => !isPointInsidePolygon(vertex, outsidePolygon))) {
+    if (
+        insideVertices
+            .concat(insideEdgeMidpoints)
+            .some(vertex => !isPointInsidePolygon(vertex, outsidePolygon))) {
         return false;
     }
 
@@ -178,9 +183,14 @@ export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: P
 export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePolygon: Polygon): boolean {
     "worklet";
     const insideVertices = getAbsolutePolygonVerticesWorklet(insidePolygon);
+    const insideEdgeMidpoints = getPolygonEdgesWorklet(insidePolygon).map(getLineSegmentMidpointWorklet);
 
-    // all points of the inside polygon are inside the outside polygon
-    if (insideVertices.some(vertex => !isPointInsidePolygonWorklet(vertex, outsidePolygon))) {
+    // all vertices and edge midpoints of the inside polygon are inside the outside polygon
+    if (
+        insideVertices
+            .concat(insideEdgeMidpoints)
+            .some(point => !isPointInsidePolygonWorklet(point, outsidePolygon))
+    ) {
         return false;
     }
 
@@ -367,4 +377,47 @@ export function getPolygonCentroid(polygon: Polygon, absolute = true): Point {
 
         return getPolygonCentroid(polygon, absolute);
     }
+}
+
+export function clampPolygonToBoundingBox(polygon: Polygon, boundingBox: Box): void {
+    const polygonDimensions = getPolygonDimensions(polygon);
+
+    const clampedOrigin: Point = [
+        clamp(
+            polygon.origin[0], [
+                boundingBox.origin[0], 
+                boundingBox.origin[0] + boundingBox.columns - polygonDimensions.columns
+            ]
+        ),
+        clamp(
+            polygon.origin[1], [
+                boundingBox.origin[1],
+                boundingBox.origin[1] + boundingBox.rows - polygonDimensions.rows
+            ]
+        )
+    ];
+
+    polygon.origin = clampedOrigin;
+}
+
+export function clampPolygonToBoundingBoxWorklet(polygon: Polygon, boundingBox: Box): void {
+    "worklet";
+    const polygonDimensions = getPolygonDimensionsWorklet(polygon);
+
+    const clampedOrigin: Point = [
+        clampWorklet(
+            polygon.origin[0], [
+                boundingBox.origin[0], 
+                boundingBox.origin[0] + boundingBox.columns - polygonDimensions.columns
+            ]
+        ),
+        clampWorklet(
+            polygon.origin[1], [
+                boundingBox.origin[1],
+                boundingBox.origin[1] + boundingBox.rows - polygonDimensions.rows
+            ]
+        )
+    ];
+
+    polygon.origin = clampedOrigin;
 }

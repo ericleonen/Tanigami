@@ -2,7 +2,7 @@ import { PUZZLE } from "@/constants/puzzle";
 import { Polygon as SvgPolygon } from "react-native-svg";
 import { polygonToSvgPoints } from "@/geometry/svg";
 import Animated, { SharedValue, useAnimatedProps, useSharedValue, withSpring } from "react-native-reanimated";
-import { pointScaleWorklet, pointSumWorklet } from "@/geometry/point";
+import { pointScaleWorklet, pointSum, pointSumWorklet } from "@/geometry/point";
 import { useEffect, useMemo } from "react";
 
 const AnimatedPolygon = Animated.createAnimatedComponent(SvgPolygon);

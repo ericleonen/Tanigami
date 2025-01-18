@@ -63,7 +63,12 @@ export function distanceBetweenPointsWorklet(point1: Point, point2: Point): numb
 }
 
 export function arePointsEqual(point1: Point, point2: Point): boolean {
-    return distanceBetweenPoints(point1, point2) === 0;
+    return point1[0] === point2[0] && point1[1] === point2[1];
+} 
+
+export function arePointsEqualWorklet(point1: Point, point2: Point): boolean {
+    "worklet";
+    return point1[0] === point2[0] && point1[1] === point2[1];
 } 
 
 /**

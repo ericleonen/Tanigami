@@ -1,5 +1,5 @@
 import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
-import { distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointSum } from "./point";
+import { distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointScaleWorklet, pointSum, pointSumWorklet } from "./point";
 import { dot, getVectorMagnitude } from "./vector";
 
 /**
@@ -115,6 +115,9 @@ export function getGridPointsOnLineSegment(lineSegment: LineSegment): Point[] {
 
         for (let x = minX; x <= maxX; x++) {
             const y = equation(x);
+
+            if (y % 1 !== 0) continue
+
             points.push([x, y]);
         }
     }
@@ -127,6 +130,14 @@ export function getGridPointsOnLineSegment(lineSegment: LineSegment): Point[] {
  */
 export function getLineSegmentMidpoint(lineSegment: LineSegment): Point {
     return pointScale(pointSum(...lineSegment), 0.5);
+}
+
+/**
+ * Returns the midpoint of the given line segment.
+ */
+export function getLineSegmentMidpointWorklet(lineSegment: LineSegment): Point {
+    "worklet";
+    return pointScaleWorklet(pointSumWorklet(...lineSegment), 0.5);
 }
 
 /**

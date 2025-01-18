@@ -1,4 +1,4 @@
-import { getPolygonCentroid, getPolygonDimensions } from "@/geometry/polygon";
+import { clampPolygonToBoundingBox, getPolygonCentroid, getPolygonDimensions } from "@/geometry/polygon";
 import { uniform } from "./random";
 import { pointDifference, pointScale, pointSum } from "@/geometry/point";
 import { getVectorMagnitude } from "@/geometry/vector";
@@ -24,7 +24,7 @@ export default function shuffleAndArrangeTiles(
 
         if (!tookStep) break;
 
-        clampTilesToBoundary(tiles, boundingBox);
+        tiles.forEach(tile => clampPolygonToBoundingBox(tile, boundingBox))
     }
 
     return tiles;
@@ -92,19 +92,4 @@ function arrangeTilesStep(tiles: Polygon[], config: ArrangeTilesConfig): boolean
     });
 
     return tookStep;
-}
-
-function clampTilesToBoundary(tiles: Polygon[], boundingBox: Box): void {
-    tiles.forEach(tile => {
-        const tileDimensions = getPolygonDimensions(tile);
-
-        const minX = boundingBox.origin[0];
-        const maxX = minX + boundingBox.columns - tileDimensions.columns;
-
-        const minY = boundingBox.origin[1];
-        const maxY = minY + boundingBox.rows - tileDimensions.rows;
-
-        tile.origin[0] = clamp(tile.origin[0], [minX, maxX]);
-        tile.origin[1] = clamp(tile.origin[1], [minY, maxY]);
-    });
 }
