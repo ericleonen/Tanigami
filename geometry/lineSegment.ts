@@ -29,11 +29,17 @@ export function isPointOnLineSegmentWorklet(point: Point, lineSegment: LineSegme
     return isApproximatelyEqualWorklet(d, d1 + d2);
 }
 
+/**
+ * Returns true if the given line segments are exactly equal to eachother.
+ */
 export function areLineSegmentsEqual(lineSegment1: LineSegment, lineSegment2: LineSegment): boolean {
     return arePointsEqual(lineSegment1[0], lineSegment2[0]) && 
         arePointsEqual(lineSegment1[1], lineSegment2[1]);
 }
 
+/**
+ * Returns true if the given line segments are exactly equal to eachother.
+ */
 export function areLineSegmentsEqualWorklet(lineSegment1: LineSegment, lineSegment2: LineSegment): boolean {
     "worklet";
     return arePointsEqualWorklet(lineSegment1[0], lineSegment2[0]) && 
@@ -41,7 +47,8 @@ export function areLineSegmentsEqualWorklet(lineSegment1: LineSegment, lineSegme
 }
 
 /**
- * Returns true if the inner line segment lies inside the outer line segment.
+ * Returns true if the inner line segment lies inside the outer line segment. If the two line
+ * segments are exactly equal, returns allowEquals.
  */
 export function isLineSegmentInsideLineSegment(
     innerLineSegment: LineSegment, 
@@ -57,7 +64,8 @@ export function isLineSegmentInsideLineSegment(
 }
 
 /**
- * Returns true if the inner line segment lies inside the outer line segment.
+ * Returns true if the inner line segment lies inside the outer line segment. If the two line
+ * segments are exactly equal, returns allowEquals.
  */
 export function isLineSegmentInsideLineSegmentWorklet(
     innerLineSegment: LineSegment, 
@@ -191,6 +199,9 @@ export function getNearestPointOnLineSegmentToPoint(point: Point, lineSegment: L
     }
 }
 
+/**
+ * Returns the distance between the given point and line segment.
+ */
 export function getDistanceBetweenPointAndLineSegment(point: Point, lineSegment: LineSegment): number {
     const nearestPoint = getNearestPointOnLineSegmentToPoint(point, lineSegment);
 

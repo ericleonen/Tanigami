@@ -65,7 +65,8 @@ export function getAbsolutePolygonVerticesWorklet(polygon: Polygon): Point[] {
 }
 
 /**
- * Returns a list of absolute (or relative) edges of the given polygon.
+ * Returns a list of edges of the given polygon. These edges are relative or absolute based on the
+ * relative flag (default absolute).
  */
 export function getPolygonEdges(polygon: Polygon, relative = false): LineSegment[] {
     const vertices = relative ? polygon.vertices : getAbsolutePolygonVertices(polygon);
@@ -78,11 +79,12 @@ export function getPolygonEdges(polygon: Polygon, relative = false): LineSegment
 }
 
 /**
- * Returns a list of absolute edges of the given polygon.
+ * Returns a list of edges of the given polygon. These edges are relative or absolute based on the
+ * relative flag (default absolute).
  */
-export function getPolygonEdgesWorklet(polygon: Polygon): LineSegment[] {
+export function getPolygonEdgesWorklet(polygon: Polygon, relative = false): LineSegment[] {
     "worklet"
-    const vertices = getAbsolutePolygonVerticesWorklet(polygon);
+    const vertices = relative ? polygon.vertices : getAbsolutePolygonVerticesWorklet(polygon);
 
     return vertices.map((vertex, i) => {
         const nextVertex = vertices[(i + 1) % vertices.length];
@@ -179,7 +181,6 @@ export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: P
         return false;
     }
 
-
     // no edges between the inside and outside polygons intersect
     return !getPolygonEdgesWorklet(insidePolygon).some(insideEdge => {
         return getPolygonEdgesWorklet(outsidePolygon).some(outsideEdge => (
@@ -216,7 +217,6 @@ export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePol
         return false;
     }
 
-
     // no edges between the inside and outside polygons intersect
     return !getPolygonEdgesWorklet(insidePolygon).some(insideEdge => {
         return getPolygonEdgesWorklet(outsidePolygon).some(outsideEdge => (
@@ -226,20 +226,10 @@ export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePol
 }
 
 /**
- * Returns true if the given edge lies on an edge (abslute) of the given polygon.
+ * Returns the area of the given polygon.
  */
-export function doesPolygonContainEdge(polygon: Polygon, edge: LineSegment): boolean {
-    return getPolygonEdges(polygon).some(
-        polygonEdge => isLineSegmentInsideLineSegment(edge, polygonEdge)
-    );
-}
-
-/**
- * Returns the area of the given polygon. If signed is true (default false), the returned area is
- * negative if the polygon is oriented counter clockwise, and positive if it is oriented clockwise.
- */
-export function getPolygonArea(polygon: Polygon, signed = false): number {
-    if (polygon.signedArea) return polygon.signedArea;
+export function getPolygonArea(polygon: Polygon): number {
+    if (polygon.signedArea) return Math.abs(polygon.signedArea);
 
     polygon.signedArea = 0;
 
@@ -252,11 +242,20 @@ export function getPolygonArea(polygon: Polygon, signed = false): number {
 
     polygon.signedArea /= 2;
 
-    return signed ? polygon.signedArea : Math.abs(polygon.signedArea);
+    return Math.abs(polygon.signedArea);
 }
 
 /**
- * Returns a list of all absolute grid points that lie on the given polygon.
+ * Returns true if the vertices of the given polygon are in clockwise orientation.
+ */
+function arePolygonVerticesClockwise(polygon: Polygon): boolean {
+    getPolygonArea(polygon);
+
+    return polygon.signedArea! > 0;
+}
+
+/**
+ * Returns a list of all absolute grid points that lie on the given polygon's edges.
  */
 export function getGridPointsOnPolygonEdges(polygon: Polygon): Point[] {
     return getPolygonEdges(polygon).reduce((points, edge) => {
@@ -307,7 +306,7 @@ export function standardizePolygon(polygon: Polygon): Polygon {
         vertices: relativeVertices
     };
 
-    if (getPolygonArea(standardizedPolygon, true) < 0) {
+    if (!arePolygonVerticesClockwise(standardizedPolygon)) {
         standardizedPolygon.vertices.reverse();
         standardizedPolygon.vertices.unshift(standardizedPolygon.vertices.pop()!);
         standardizedPolygon.signedArea = -standardizedPolygon.signedArea!;
@@ -317,7 +316,7 @@ export function standardizePolygon(polygon: Polygon): Polygon {
 }
 
 /**
- * Returns true if the given line segment intersect an edge of the given polygon at a finite number
+ * Returns true if the given line segment intersects an edge of the given polygon at a finite number
  * of points on the line segment's interior.
  */
 function doesLineSegmentIntersectPolygonEdges(lineSegment: LineSegment, polygon: Polygon): boolean {
@@ -362,6 +361,9 @@ export function getSmallestAngleOfPolygon(polygon: Polygon): number {
     return smallestAngle;
 }
 
+/**
+ * Returns the smallest interior width of the given polygon.
+ */
 export function getSmallestWidthOfPolygon(polygon: Polygon): number {
     let smallestWidth = Infinity;
 
@@ -402,6 +404,10 @@ export function getPolygonCentroid(polygon: Polygon, absolute = true): Point {
     }
 }
 
+/**
+ * Clamps the given polygon's position to be inside the given bounding box. Mutates the given
+ * polygon.
+ */
 export function clampPolygonToBoundingBox(polygon: Polygon, boundingBox: Box): void {
     const polygonDimensions = getPolygonDimensions(polygon);
 
@@ -423,6 +429,10 @@ export function clampPolygonToBoundingBox(polygon: Polygon, boundingBox: Box): v
     polygon.origin = clampedOrigin;
 }
 
+/**
+ * Clamps the given polygon's position to be inside the given bounding box. Mutates the given
+ * polygon.
+ */
 export function clampPolygonToBoundingBoxWorklet(polygon: Polygon, boundingBox: Box): void {
     "worklet";
     const polygonDimensions = getPolygonDimensionsWorklet(polygon);
