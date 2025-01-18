@@ -2,10 +2,15 @@ import { clampPolygonToBoundingBox, getPolygonCentroid, getPolygonDimensions } f
 import { uniform } from "./random";
 import { pointDifference, pointScale, pointSum } from "@/geometry/point";
 import { getVectorMagnitude } from "@/geometry/vector";
-import { clamp } from "@/geometry/number";
 
 type ArrangeTilesConfig = {
+    /**
+     * The fixed step magnitude of a tile.
+     */
     alpha: number,
+    /**
+     * The maximum number of steps a tile can take.
+     */
     maxSteps: number
 }
 
@@ -56,6 +61,9 @@ function shuffleTiles(tiles: Polygon[], boundingBox: Box): Polygon[] {
     });
 }
 
+/**
+ * Mutates the given tiles to take an arrangement step.
+ */
 function arrangeTilesStep(tiles: Polygon[], config: ArrangeTilesConfig): boolean {
     const deltas: Vector[] = tiles.map(() => [0, 0]);
     let tookStep = false;
