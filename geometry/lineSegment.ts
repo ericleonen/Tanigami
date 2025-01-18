@@ -1,5 +1,5 @@
 import { isApproximatelyEqual, isApproximatelyEqualWorklet } from "./number";
-import { distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointScaleWorklet, pointSum, pointSumWorklet } from "./point";
+import { arePointsEqual, arePointsEqualWorklet, distanceBetweenPoints, distanceBetweenPointsWorklet, pointDifference, pointDifferenceWorklet, pointScale, pointScaleWorklet, pointSum, pointSumWorklet } from "./point";
 import { dot, getVectorMagnitude } from "./vector";
 
 /**
@@ -29,15 +29,48 @@ export function isPointOnLineSegmentWorklet(point: Point, lineSegment: LineSegme
     return isApproximatelyEqualWorklet(d, d1 + d2);
 }
 
+export function areLineSegmentsEqual(lineSegment1: LineSegment, lineSegment2: LineSegment): boolean {
+    return arePointsEqual(lineSegment1[0], lineSegment2[0]) && 
+        arePointsEqual(lineSegment1[1], lineSegment2[1]);
+}
+
+export function areLineSegmentsEqualWorklet(lineSegment1: LineSegment, lineSegment2: LineSegment): boolean {
+    "worklet";
+    return arePointsEqualWorklet(lineSegment1[0], lineSegment2[0]) && 
+        arePointsEqualWorklet(lineSegment1[1], lineSegment2[1]);
+}
+
 /**
  * Returns true if the inner line segment lies inside the outer line segment.
  */
 export function isLineSegmentInsideLineSegment(
     innerLineSegment: LineSegment, 
-    outerLineSegment: LineSegment
+    outerLineSegment: LineSegment,
+    allowEquals = true
 ): boolean {
-    return isPointOnLineSegment(innerLineSegment[0], outerLineSegment) && 
-        isPointOnLineSegment(innerLineSegment[1], outerLineSegment);
+    if (areLineSegmentsEqual(innerLineSegment, outerLineSegment)) {
+        return allowEquals;
+    } else {
+        return isPointOnLineSegment(innerLineSegment[0], outerLineSegment) && 
+            isPointOnLineSegment(innerLineSegment[1], outerLineSegment);
+    }
+}
+
+/**
+ * Returns true if the inner line segment lies inside the outer line segment.
+ */
+export function isLineSegmentInsideLineSegmentWorklet(
+    innerLineSegment: LineSegment, 
+    outerLineSegment: LineSegment,
+    allowEquals = true
+): boolean {
+    "worklet";
+    if (areLineSegmentsEqualWorklet(innerLineSegment, outerLineSegment)) {
+        return allowEquals;
+    } else {
+        return isPointOnLineSegmentWorklet(innerLineSegment[0], outerLineSegment) && 
+            isPointOnLineSegmentWorklet(innerLineSegment[1], outerLineSegment);
+    }
 }
 
 /**
@@ -163,31 +196,3 @@ export function getDistanceBetweenPointAndLineSegment(point: Point, lineSegment:
 
     return distanceBetweenPoints(point, nearestPoint);
 }
-
-export function getShortestLineSegmentBetweenLineSegments(
-    lineSegment1: LineSegment, 
-    lineSegment2: LineSegment
-): LineSegment {
-    const points = [
-        getNearestPointOnLineSegmentToPoint(lineSegment1[0], lineSegment2),
-        getNearestPointOnLineSegmentToPoint(lineSegment1[1], lineSegment2),
-        getNearestPointOnLineSegmentToPoint(lineSegment2[0], lineSegment1),
-        getNearestPointOnLineSegmentToPoint(lineSegment2[1], lineSegment1)
-    ];
-
-    let shortestDistance = Infinity;
-    let closestPair: LineSegment = [points[0], points[1]];
-
-    for (let i = 0; i < points.length; i++) {
-        for (let j = i + 1; j < points.length; j++) {
-            const distance = distanceBetweenPoints(points[i], points[j]);
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestPair = [points[i], points[j]];
-            }
-        }
-    }
-
-    return closestPair;
-}
-

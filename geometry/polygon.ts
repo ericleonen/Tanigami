@@ -1,4 +1,4 @@
-import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, getLineSegmentMidpointWorklet, isLineSegmentInsideLineSegment } from "./lineSegment";
+import { doLineSegmentsIntersect, doLineSegmentsIntersectWorklet, getDistanceBetweenPointAndLineSegment, getGridPointsOnLineSegment, getLineSegmentMidpoint, getLineSegmentMidpointWorklet, isLineSegmentInsideLineSegment, isLineSegmentInsideLineSegmentWorklet } from "./lineSegment";
 import { arePointsEqual, pointDifference, pointScale, pointSum, pointSumWorklet } from "./point";
 import { isPointOnLineSegment, isPointOnLineSegmentWorklet } from "./lineSegment"
 import { getAngleBetweenVectors } from "./vector";
@@ -158,20 +158,32 @@ export function isPointInsidePolygonWorklet(point: Point, polygon: Polygon, incl
  */
 export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: Polygon): boolean {
     const insideVertices = getAbsolutePolygonVertices(insidePolygon);
-    const insideEdgeMidpoints = getPolygonEdges(insidePolygon).map(getLineSegmentMidpoint);
+    const insideEdges = getPolygonEdges(insidePolygon);
+    const insideEdgeMidpoints = insideEdges.map(getLineSegmentMidpoint);
 
-    // all points of the inside polygon are inside the outside polygon
+    // all vertices and edge midpoints of the inside polygon are inside the outside polygon
     if (
         insideVertices
             .concat(insideEdgeMidpoints)
-            .some(vertex => !isPointInsidePolygon(vertex, outsidePolygon))) {
+            .some(point => !isPointInsidePolygon(point, outsidePolygon))
+    ) {
         return false;
     }
 
+    const outsideEdges = getPolygonEdges(outsidePolygon);
+
+    // all inside edges are completely inside the outside polygon
+    if (insideEdges.some(insideEdge => 
+        outsideEdges.some(outsideEdge => isLineSegmentInsideLineSegment(outsideEdge, insideEdge, false))
+    )) {
+        return false;
+    }
+
+
     // no edges between the inside and outside polygons intersect
-    return !getPolygonEdges(insidePolygon).some(insideEdge => {
-        return getPolygonEdges(outsidePolygon).some(outsideEdge => (
-            doLineSegmentsIntersect(insideEdge, outsideEdge)
+    return !getPolygonEdgesWorklet(insidePolygon).some(insideEdge => {
+        return getPolygonEdgesWorklet(outsidePolygon).some(outsideEdge => (
+            doLineSegmentsIntersectWorklet(insideEdge, outsideEdge)
         ));
     });
 }
@@ -183,7 +195,8 @@ export function isPolygonInsidePolygon(insidePolygon: Polygon, outsidePolygon: P
 export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePolygon: Polygon): boolean {
     "worklet";
     const insideVertices = getAbsolutePolygonVerticesWorklet(insidePolygon);
-    const insideEdgeMidpoints = getPolygonEdgesWorklet(insidePolygon).map(getLineSegmentMidpointWorklet);
+    const insideEdges = getPolygonEdgesWorklet(insidePolygon);
+    const insideEdgeMidpoints = insideEdges.map(getLineSegmentMidpointWorklet);
 
     // all vertices and edge midpoints of the inside polygon are inside the outside polygon
     if (
@@ -193,6 +206,16 @@ export function isPolygonInsidePolygonWorklet(insidePolygon: Polygon, outsidePol
     ) {
         return false;
     }
+
+    const outsideEdges = getPolygonEdgesWorklet(outsidePolygon);
+
+    // all inside edges are completely inside the outside polygon
+    if (insideEdges.some(insideEdge => 
+        outsideEdges.some(outsideEdge => isLineSegmentInsideLineSegmentWorklet(outsideEdge, insideEdge, false))
+    )) {
+        return false;
+    }
+
 
     // no edges between the inside and outside polygons intersect
     return !getPolygonEdgesWorklet(insidePolygon).some(insideEdge => {
