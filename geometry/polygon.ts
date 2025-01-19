@@ -454,3 +454,12 @@ export function clampPolygonToBoundingBoxWorklet(polygon: Polygon, boundingBox: 
 
     polygon.origin = clampedOrigin;
 }
+
+/**
+ * Returns true if the given edge is part of the given polygon's edges.
+ */
+export function doesPolygonContainEdge(edge: LineSegment, polygon: Polygon): boolean {
+    return getPolygonEdges(polygon).some(
+        polygonEdge => isLineSegmentInsideLineSegment(edge, polygonEdge)
+    );
+}

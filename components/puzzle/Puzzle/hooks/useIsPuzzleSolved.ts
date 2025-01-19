@@ -14,7 +14,7 @@ export default function useIsPuzzleSolved(tiles: Polygon[], target: Shape): bool
                 const nextVertex = targetVertices[(i + 1) % targetVertices.length];
                 const edge: [Point, Point] = [vertex, nextVertex];
 
-                return tiles.some(tile => doesPolygonContainEdge(tile, edge));
+                return tiles.some(tile => doesPolygonContainEdge(edge, tile));
             });
         }) && tiles.every(tile => isPolygonInsideShape(tile, target));
 
