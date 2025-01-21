@@ -32,7 +32,9 @@ function rawToTargetsJSON(): void {
             return polygon;
         });
 
-        targets[name] = shape;
+        const formattedName = name.replaceAll("_", " ");
+
+        targets[formattedName] = shape;
     });
 
     fs.writeFileSync("data/targets/index.json", JSON.stringify(targets));

@@ -1,14 +1,9 @@
-import { Dispatch, SetStateAction, useState } from "react"
+import { Dispatch, SetStateAction } from "react"
 import Tile from "./Tile"
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
+import { GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler"
 import Svg, { G } from "react-native-svg"
 import { StyleSheet, View } from "react-native"
-import { distanceBetweenPointsWorklet, nearestGridPointWorklet, pointScaleWorklet, pointSumWorklet } from "@/geometry/point"
 import { PUZZLE } from "@/constants/puzzle"
-import { clampWorklet } from "@/geometry/number"
-import { getPolygonDimensionsWorklet, isPointInsidePolygonWorklet } from "@/geometry/polygon"
-import { runOnJS, useSharedValue } from "react-native-reanimated"
-import { isPolygonInsideShapeWorklet } from "@/geometry/shape"
 import useTileDrag from "./hooks/useTileDrag"
 
 type Props = {
@@ -21,10 +16,11 @@ type Props = {
     tiles: Polygon[],
     setTiles: Dispatch<SetStateAction<Polygon[]>>,
     target: Shape,
-    setTargetHighlight: Dispatch<SetStateAction<Polygon | null>>
+    setTargetHighlight: Dispatch<SetStateAction<Polygon | null>>,
+    disabled: boolean
 }
 
-export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, target, setTargetHighlight }: Props) {
+export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, target, setTargetHighlight, disabled }: Props) {
     const offset = PUZZLE.screenPadding + svgMargin;
 
     const { animatedTranslation, drag, draggedTileId } = useTileDrag({
@@ -37,7 +33,8 @@ export default function Tiles({ cellSize, svgSize, svgMargin, tiles, setTiles, t
         tiles,
         setTiles,
         target,
-        setTargetHighlight
+        setTargetHighlight,
+        disabled
     });
 
     const svgTiles = tiles.map(tile => {

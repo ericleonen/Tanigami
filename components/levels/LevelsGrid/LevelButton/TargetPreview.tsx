@@ -6,10 +6,11 @@ import { StyleSheet, View } from "react-native";
 import Svg, { G, Polygon } from "react-native-svg"
 
 type Props = {
-    target: Shape
+    target: Shape,
+    color: string
 }
 
-export default function TargetPreview({ target }: Props) {
+export default function TargetPreview({ target, color }: Props) {
     const { layoutSize: containerSize, handleLayout } = useLayoutSize(0);
     const size = Math.max(containerSize.width - 2 * PUZZLE.target.border.previewThickness, 0);
 
@@ -17,7 +18,7 @@ export default function TargetPreview({ target }: Props) {
         <Polygon 
             key={polygon.id}
             points={polygonToSvgPoints(polygon, size / PUZZLE.columns)}
-            fill={COLORS.yellow}
+            fill={color}
             stroke={COLORS.black}
             strokeWidth={PUZZLE.target.border.previewThickness}
             strokeLinejoin="round"

@@ -4,7 +4,10 @@ type LayoutSize = {
 };
 
 type Level = {
+    name: string,
     index: number,
     target: Shape,
     tiles: Polygon[]
 }
+
+type LevelState = "locked" | "current" | "solved";

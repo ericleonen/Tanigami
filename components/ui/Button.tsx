@@ -5,12 +5,14 @@ import * as Haptics from "expo-haptics";
 
 type Props = PropsWithChildren<{
     onPress: () => void,
-    containerStyle: StyleProp<ViewStyle>
+    containerStyle: StyleProp<ViewStyle>,
+    disabled: boolean
 }>;
 
-export default function Button({ onPress, containerStyle, children }: Props) {
+export default function Button({ onPress, containerStyle, children, disabled }: Props) {
     return (
         <Pressable
+            disabled={disabled}
             onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)
                 onPress();

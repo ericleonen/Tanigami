@@ -12,7 +12,8 @@ type UseTileDragProps = {
     tiles: Polygon[],
     setTiles: Dispatch<SetStateAction<Polygon[]>>,
     target: Shape,
-    setTargetHighlight: Dispatch<SetStateAction<Polygon | null>>
+    setTargetHighlight: Dispatch<SetStateAction<Polygon | null>>,
+    disabled: boolean
 }
 
 export default function useTileDrag({
@@ -22,7 +23,8 @@ export default function useTileDrag({
     tiles,
     setTiles,
     target,
-    setTargetHighlight
+    setTargetHighlight,
+    disabled
 }: UseTileDragProps): {
     animatedTranslation: SharedValue<Vector>,
     drag: PanGesture,
@@ -34,6 +36,8 @@ export default function useTileDrag({
 
     const drag = Gesture.Pan()
         .onStart(event => {
+            if (disabled) return;
+
             // adjust touch point for the offset and convert into grid cell units
             const touchPoint = pointScaleWorklet(
                 [event.x - offset, event.y - offset],
@@ -57,7 +61,7 @@ export default function useTileDrag({
             animatedTranslation.value = [0, 0];
         })
         .onChange(event => {
-            if (!draggedTile) return;
+            if (!draggedTile || disabled) return;
 
             animatedTranslation.value = pointScaleWorklet(
                 [event.translationX, event.translationY],

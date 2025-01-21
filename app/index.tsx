@@ -1,9 +1,18 @@
 import ModeButton from "@/components/home/ModeButton";
 import { COLORS } from "@/constants/colors";
+import STORAGE from "@/constants/storage";
 import TYPOGRAPHY from "@/constants/type";
+import { useAsyncStorage } from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "expo-router";
 import { StyleSheet, View, Text } from "react-native";
 
 export default function HomeScreen() {
+	const storedSolvedLevels = useAsyncStorage(STORAGE.solvedLevels);
+
+	useFocusEffect(() => {
+		storedSolvedLevels.removeItem();
+	})
+
 	return (
 		<View style={styles.container}>
 			<Text style={styles.title}>TANIGAMI</Text>
