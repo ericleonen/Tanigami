@@ -3,7 +3,7 @@ import { PUZZLE } from "@/constants/puzzle";
 import TargetShape from "./TargetShape";
 import Tiles from "./Tiles";
 import useLayoutSize from "@/hooks/useLayoutSize";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useHandlePuzzleSolved from "@/components/puzzle/Puzzle/hooks/useHandlePuzzleSolved";
 import React from "react";
 
@@ -21,7 +21,10 @@ const svgMargin = Math.max(
 export default function Puzzle({ target, initialTiles, onSolved }: Props) {
     const { layoutSize: svgSize, handleLayout } = useLayoutSize(PUZZLE.screenPadding);
 
-    const cellSize = Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns;
+    const cellSize = Math.min(
+        Math.max(svgSize.width - 2 * svgMargin, 0) / PUZZLE.columns,
+        Math.max(svgSize.height - 2 * svgMargin, 0) / PUZZLE.rows
+    )
 
     const [tiles, setTiles] = useState<Polygon[]>(initialTiles);
     const [targetHighlight, setTargetHighlight] = useState<Polygon | null>(null);

@@ -16,7 +16,7 @@ export default function TopAppBar({ title }: Props) {
 
 const styles = StyleSheet.create({
     container: {
-        height: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 60 : 60,
+        height: Platform.OS === 'android' ? (StatusBar.currentHeight || 0) + 52 : 52,
         backgroundColor: COLORS.white,
         borderBottomWidth: 3,
         borderBottomColor: COLORS.black,
@@ -27,6 +27,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 24,
-        fontFamily: TYPOGRAPHY.black
+        fontFamily: TYPOGRAPHY.black,
+        lineHeight: 24
     }
 });

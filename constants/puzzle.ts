@@ -2,6 +2,7 @@ import { COLORS } from "./colors";
 
 export const PUZZLE = {
     screenPadding: 16,
+    rows: 16,
     columns: 8,
     target: {
         color: COLORS.lightgray,

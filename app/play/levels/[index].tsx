@@ -43,8 +43,8 @@ export default function LevelScreen() {
             <Puzzle 
                 target={level.target}
                 initialTiles={shuffleAndArrangeTiles(tiles, {
-                    origin: [0, PUZZLE.columns],
-                    rows: PUZZLE.columns,
+                    origin: [0, PUZZLE.columns + 1],
+                    rows: PUZZLE.columns - 1,
                     columns: PUZZLE.columns
                 }, {
                     alpha: 0.1,
