@@ -1,5 +1,3 @@
-import { pointSum } from "@/geometry/point";
-import { doesPolygonContainEdge, getAbsolutePolygonVertices } from "@/geometry/polygon";
 import { isPolygonInsideShape } from "@/geometry/shape";
 import { useEffect, useState } from "react";
 
@@ -16,8 +14,12 @@ export default function useHandlePuzzleSolved(
             return;
         }
 
-        const isSolved = tiles.every(tile => isPolygonInsideShape(tile, target));
+        const isEveryTileInsideShape = tiles.every(tile => isPolygonInsideShape(tile, target));
+        // const areAnyTilesOverlapping = tiles.some(
+        //     tile1 => tiles.some(tile2 => arePolygonsOverlapping(tile1, tile2))
+        // );
 
+        const isSolved = isEveryTileInsideShape;
         setSolved(isSolved);
     }, [tiles, target, solved, setSolved]);
 
