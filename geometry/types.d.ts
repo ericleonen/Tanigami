@@ -1,7 +1,5 @@
 /**
- * A 2-tuple specifying the x and y coordinates of a point. Points with greater x values are
- * positioned more right. Points with greater y values are positions more down. Units are grid
- * units.
+ * A 2-tuple specifying the x and y coordinates of a point.
  */
 type Point = [number, number];
 
@@ -11,63 +9,46 @@ type Point = [number, number];
 type Vector = [number, number];
 
 /**
- * A 2-tuple specifying the two endpoints of a line segment.
+ * A 2-tuple specifying the two endpoints of a line segment. 
  */
 type LineSegment = [Point, Point];
+
+/**
+ * An object describing the height and width of something.
+ */
+type Dimensions = {
+    height: number,
+    width: number
+}
 
 /**
  * A box defined by an absolute origin and its dimensions.
  */
 type Box = {
     origin: Point,
-} & Dimensions
+} & Dimensions;
 
 /**
- * A 2-tuple specifying the bounds of an interval.
- */
-type Interval = [number, number];
-
-/**
- * An object describing how many grid cell rows and columns a polygon or shape's box takes up.
- */
-type Dimensions = {
-    rows: number,
-    columns: number
-}
-
-/**
- * A polygon defined by an absolute origin and a list of relatively-positioned vertices. Units are
- * grid units.
+ * A polygon defined by a unique id, an absolute origin, and a list of relative vertices. A
+ * standardized polygon has its origin at the top, left point of its box and its vertices in
+ * clockwise order with its first vertex being the top, left vertex.
+ * 
+ * In most cases, do not access a polygon's optional properties dimensions, signedArea, or centroid
+ * directly, but use getPolygonDimensions, getPolygonArea, and getPolygonCentroid respectively
+ * instead.
  */
 type Polygon = {
     id: string,
-    /**
-     * The absolute position of the top left point of this polygon's box.
-     */
     origin: Point,
-    /**
-     * A list of points that define the relative positions of vertices of this Polygon. Points are
-     * ordered in a clockwise fashion, with the first point having the least y value (and least x
-     * value). All points are relative to this polygon's origin.
-     */
     vertices: Point[],
-    /**
-     * The number of rows and columns in grid cell units this polygon takes up. Do not access this
-     * directly, but use getPolygonDimensions.
-     */
     dimensions?: Dimensions,
-    /**
-     * The signed area of this polygon based on its orientation. Do not access this directly, but
-     * use getPolygonArea.
-     */
     signedArea?: number,
-    /**
-     * The relative centroid of this polygon. Do not access this directly, but use getPolygonCentroid.
-     */
     centroid?: Point
 }
 
 /**
- * A shape defined by a list of polygons. No two polygons can share an edge or intersect.
+ * A shape defined by a list of polygons.
+ * 
+ * In general, no two polygons should share an edge or intersect.
  */
 type Shape = Polygon[];
