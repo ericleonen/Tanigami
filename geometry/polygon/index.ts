@@ -1,5 +1,6 @@
 import { getIntegerPointsOnLineSegment } from "../lineSegment";
 import { getDistanceBetweenPointAndLineSegment } from "../lineSegment/andPoint";
+import { clamp } from "../number";
 import { scalePoint } from "../point";
 import { addPoints, addPointsWorklet, arePointsEqual, subtractPoints } from "../point/andPoint";
 import { getAngleBetweenVectors } from "../vector/andVector";
@@ -101,11 +102,8 @@ export function getPolygonArea(polygon: Polygon): number {
 
     polygon.signedArea = 0;
 
-    polygon.vertices.forEach((currentVertex, i) => {
-        const prevVertex = polygon.vertices[(i - 1 + polygon.vertices.length) % polygon.vertices.length];
-        const nextVertex = polygon.vertices[(i + 1) % polygon.vertices.length];
-
-        polygon.signedArea! += currentVertex[1] * (prevVertex[0] - nextVertex[0]);
+    getPolygonEdges(polygon).forEach(([vertex1, vertex2]) => {
+        polygon.signedArea! += vertex1[0]*vertex2[1] - vertex2[0]*vertex1[1];
     });
 
     polygon.signedArea /= 2;
@@ -123,9 +121,10 @@ export function arePolygonVerticesClockwise(polygon: Polygon): boolean {
 }
 
 /**
- * Returns a list of all absolute grid points that lie on the given polygon's edges.
+ * Returns a list of all absolute grid points that lie on the given polygon's edges. These points
+ * are in the same orientation as the polygon's vertices
  */
-export function getIntegerPointsOnPolygonEdges(polygon: Polygon): Point[] {
+export function getIntegerPointsOnPolygonBoundary(polygon: Polygon): Point[] {
     return getPolygonEdges(polygon).reduce((points, edge) => {
         points.push(...getIntegerPointsOnLineSegment(edge));
         points.pop();
@@ -241,4 +240,31 @@ export function getPolygonCentroid(polygon: Polygon, absolute = true): Point {
 
         return getPolygonCentroid(polygon, absolute);
     }
+}
+
+/**
+ * Returns the given polygon clamped to fit inside the given bounding box.
+ */
+export function clampPolygonToBoundingBox(polygon: Polygon, boundingBox: Box): Polygon {
+    const polygonDimensions = getPolygonDimensions(polygon);
+
+    const clampedOrigin: Point = [
+        clamp(
+            polygon.origin[0], [
+                boundingBox.origin[0], 
+                boundingBox.origin[0] + boundingBox.width - polygonDimensions.width
+            ]
+        ),
+        clamp(
+            polygon.origin[1], [
+                boundingBox.origin[1],
+                boundingBox.origin[1] + boundingBox.height - polygonDimensions.height
+            ]
+        )
+    ];
+
+    return {
+        ...polygon,
+        origin: clampedOrigin
+    };
 }

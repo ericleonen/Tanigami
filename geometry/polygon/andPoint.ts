@@ -3,14 +3,14 @@ import { isPointInLineSegment, isPointInLineSegmentWorklet } from "../lineSegmen
 
 /**
  * Returns true if the given absolute point lies in the given polygon, false otherwise. If
- * includeEdges is true (default), points lying on a polygon's edges are in the polygon, otherwise
- * they are outside.
+ * includeBoundary is true (default), points lying on a polygon's edges are in the polygon,
+ * otherwise they are outside.
  */
-export function isPointInPolygon(point: Point, polygon: Polygon, includeEdges = true): boolean {
+export function isPointInPolygon(point: Point, polygon: Polygon, includeBoundary = true): boolean {
     let intersections = 0;
 
     for (const edge of getPolygonEdges(polygon)) {
-        if (isPointInLineSegment(point, edge)) return includeEdges;
+        if (isPointInLineSegment(point, edge)) return includeBoundary;
 
         const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
             edge : [edge[1], edge[0]];
@@ -29,15 +29,15 @@ export function isPointInPolygon(point: Point, polygon: Polygon, includeEdges = 
 
 /**
  * Returns true if the given absolute point lies in the given polygon, false otherwise. If
- * includeEdges is true (default), points lying on a polygon's edges are in the polygon, otherwise
+ * includeBoundary is true (default), points lying on a polygon's edges are in the polygon, otherwise
  * they are outside.
  */
-export function isPointInPolygonWorklet(point: Point, polygon: Polygon, includeEdges = true): boolean {
+export function isPointInPolygonWorklet(point: Point, polygon: Polygon, includeBoundary = true): boolean {
     "worklet";
     let intersections = 0;
 
     for (const edge of getPolygonEdgesWorklet(polygon)) {
-        if (isPointInLineSegmentWorklet(point, edge)) return includeEdges;
+        if (isPointInLineSegmentWorklet(point, edge)) return includeBoundary;
 
         const [lowerVertex, upperVertex] = edge[0][1] <= edge[1][1] ?
             edge : [edge[1], edge[0]];

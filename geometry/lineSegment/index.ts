@@ -1,8 +1,9 @@
 import { scalePoint, scalePointWorklet } from "../point";
-import { addPoints, addPointsWorklet } from "../point/andPoint";
+import { addPoints, addPointsWorklet, arePointsEqual } from "../point/andPoint";
 
 /**
- * Returns a list of all points with integer coordinates on the given line segment. 
+ * Returns a list of all points with integer coordinates on the given line segment. The returned
+ * points are sorted in the same direction as the line segment.
  */
 export function getIntegerPointsOnLineSegment(lineSegment: LineSegment): Point[] {
     const points: Point[] = [];
@@ -30,6 +31,10 @@ export function getIntegerPointsOnLineSegment(lineSegment: LineSegment): Point[]
 
             points.push([x, y]);
         }
+    }
+
+    if (!arePointsEqual(lineSegment[0], points[0]))  {
+        points.reverse();
     }
 
     return points;
